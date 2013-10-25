@@ -48,7 +48,7 @@ sub AddUser
         `truncate -s 524288000 /root/virtual/$username.ext4`;
         `/sbin/mkfs -t ext4 -q /root/virtual/$username.ext4 -F`;
         my $FH = xIO::openLock('/etc/fstab', 'w');
-        print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0";
+        print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0\n";
         xIO::closeLock($FH);
         
         # Mount it
@@ -103,7 +103,6 @@ sub DelUser
                 }
             }
             
-            push(@newlines, ""); #NEW LINE
             print $FH @newlines;
             xIO::closeLock($FH);
         }
