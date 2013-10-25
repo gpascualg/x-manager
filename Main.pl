@@ -86,7 +86,7 @@ $| = 1;
     my @loops = split("\n", $usedLoop);
     
     # We substract total loop space, and add used space (as it has already been substracted from rootfs)
-    foreach $loop (@loops)
+    foreach my $loop (@loops)
     {
         my @params = split(" ", $loop);
         $freeSpace -= $params[0];
