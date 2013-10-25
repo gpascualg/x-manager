@@ -26,26 +26,46 @@ sub AddUser
         return $result;
     }
     
-    # We'll create a freaking mount point!! ¿Will it work??
+    # We'll create a mount point!
     # Chown and chmod base dir for root only
-    mkdir $config->getWWWDir($username);
-    chown "root", "root", $config->getWWWDir($username);
+    $WWWDir = $config->getWWWDir($username);
+    mkdir $WWWDir;
+    chown "root", "root", $WWWDir;
 
     # Create the mount file of 500MB
-    `touch /root/virtual/$username.ext4`;
-    `dd if=/dev/zero of=/root/virtual/$username.ext4 count=1024000`;
-    `/sbin/mkfs -t ext4 -q /root/virtual/$username.ext4 -F`;
-    my $FH = xIO::openLock('/etc/fstab', 'w');
-    print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0";
-    xIO::closeLock($FH);
+    # Do it in a separated fork, as to avoid locking out users
+    unless (fork)
+    {
+        my $lck = xIO::openLock('/etc/fstab', 'r');
     
-    # Mount it
-    `mount /www/$username`;
-    
-    # Chown and chmod logs dir for root only
-    mkdir $config->getWWWDir($username) . '/logs';
-    chown "root", "root", $config->getWWWDir($username) . '/logs';
-    chmod 0750, $config->getWWWDir($username) . '/logs';
+        `touch /root/virtual/$username.ext4`;
+        `dd if=/dev/zero of=/root/virtual/$username.ext4 count=1024000`;
+        `/sbin/mkfs -t ext4 -q /root/virtual/$username.ext4 -F`;
+        my $FH = xIO::openLock('/etc/fstab', 'w');
+        print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0";
+        xIO::closeLock($FH);
+        
+        # Mount it
+        `mount /www/$username`;
+        
+        # Chown and chmod config dir for root only
+        mkdir $WWWDir . '/config';
+        chown "root", "root", $WWWDir . '/config';
+        chmod 0750, $WWWDir . '/config';
+        
+        # Create config files
+        `echo "524288000" > $WWWDir/config/diskquota`
+        `echo "2147483648" > $WWWDir/config/bandwith`
+        
+        # Chown and chmod logs dir for root only
+        mkdir $WWWDir . '/logs';
+        chown "root", "root", $WWWDir . '/logs';
+        chmod 0750, $WWWDir . '/logs';
+        
+        xIO::closeLock($lck);
+        
+        exit;
+    }
     
     return 0;
 }
@@ -55,7 +75,7 @@ sub DelUser
     my($config, $username) = @_;
     
     # Unmount filesystem and delete
-    `umoun /www/$username`;
+    `umount /www/$username`;
     `rm -rf /www/$username`;
     `rm -f /root/virtual/$username.ext4`;
 

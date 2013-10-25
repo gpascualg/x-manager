@@ -7,7 +7,7 @@ sub new
     my $class = shift;
     my $self = {
         _baseDir            => '/root/x-manager/',
-        _WWWDir             => '/www/',#'/www/',
+        _WWWDir             => '/www/',
         _WWWGroup           => 'www-data',
         _sitesAvailable     => '/etc/nginx/sites-available',
         _sitesEnabled       => '/etc/nginx/sites-enabled',
