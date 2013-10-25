@@ -13,7 +13,6 @@ sub AddUser
     {
         return 1;
     }
-    $config->substractSpace(512000);
     
     my $salt = `mkpasswd.pl`;
     my $md5Pass = main::unix_md5_crypt($password, $salt);
@@ -32,6 +31,8 @@ sub AddUser
     {
         return 2;
     }
+    
+    $config->substractSpace(512000);
     
     # We'll create a mount point!
     # Chown and chmod base dir for root only
