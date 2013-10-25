@@ -94,7 +94,9 @@ $| = 1;
     {
         # Only for parent!
         if ($pid == 0)
+        {
             return;
+        }
         
         unlink($socketPath);
         $socket = IO::Socket::UNIX->new(
