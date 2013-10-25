@@ -75,6 +75,13 @@ $| = 1;
             return xSYS::RestoreQuota($config, $username);
         }
     );
+    
+    # Create lock file if it does not exist
+    unless (-e $config->getBaseDir() . '.lck')
+    {
+        $dir = $config->getBaseDir();
+        `touch $dir.lck`;
+    }
 
     my $pid = fork;
     my $socket = undef;
@@ -112,12 +119,6 @@ $| = 1;
     {
         sockconnect();
         $sysadmin = 1;
-    }
-    
-    # Create lock file if it does not exist
-    unless (-e $config->getBaseDir() . '.lck')
-    {
-        `touch $config->getBaseDir().lck`;
     }
 
     my $select = IO::Select->new($socket) or die "IO::Select $!";
