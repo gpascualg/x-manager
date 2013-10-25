@@ -35,9 +35,7 @@ sub AddUser
     # Create the mount file of 500MB
     # Do it in a separated fork, as to avoid locking out users
     unless (fork)
-    {
-        my $lck = xIO::openLock('/etc/fstab', 'r');
-    
+    {    
         `touch /root/virtual/$username.ext4`;
         `dd if=/dev/zero of=/root/virtual/$username.ext4 count=1024000`;
         `/sbin/mkfs -t ext4 -q /root/virtual/$username.ext4 -F`;
@@ -61,8 +59,6 @@ sub AddUser
         mkdir $WWWDir . '/logs';
         chown "root", "root", $WWWDir . '/logs';
         chmod 0750, $WWWDir . '/logs';
-        
-        xIO::closeLock($lck);
         
         exit;
     }
