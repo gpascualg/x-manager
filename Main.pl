@@ -81,7 +81,8 @@ $| = 1;
     );
     
     # Set free space
-    my $dir = chop($config->getWWWDir()); # Delete the last /
+    my $dir = $config->getWWWDir();
+    chop($dir); # Delete the last /
     my $freeSpace = `df $dir | head -2 | tail -1 | awk '{print $4}'`;
     $config->setFreeSpace($freeSpace);
 
