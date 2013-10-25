@@ -4,12 +4,31 @@ use Crypt::PasswdMD5;
 
 package xSYS;
 
+# In B
+%planToQuota = (
+    0 => 524288000,
+    1 => 1073741824,
+    2 => 2147483648
+);
+
+# In B
+%planToBandwith = (
+    0 => 2147483648,
+    1 => 5368709120,
+    2 => 21474836480
+);
+
 sub AddUser
 {
-    my($config, $username, $password) = @_;
+    my($config, $username, $password, $plan) = @_;
+    
+    # Setup configurations
+    $quota = $planToQuota{$plan};
+    $quotaMB = $quota / 1024;
+    $bandwith = $planToBandwith{$plan};
     
     # Check that we have 1/2 more than the required space, just in case
-    if ($config->getFreeSpace() < 512000 + (512000 / 2))
+    if ($config->getFreeSpace() < $quotaMB + ($quotaMB / 2))
     {
         return 1;
     }
@@ -32,7 +51,7 @@ sub AddUser
         return 2;
     }
     
-    $config->substractSpace(512000);
+    $config->substractSpace($quotaMB);
     
     # We'll create a mount point!
     # Chown and chmod base dir for root only
@@ -46,7 +65,7 @@ sub AddUser
     {    
         `touch /root/virtual/$username.ext4`;
         #`dd if=/dev/zero of=/root/virtual/$username.ext4 count=1024000`;
-        `truncate -s 524288000 /root/virtual/$username.ext4`;
+        `truncate -s $quota /root/virtual/$username.ext4`;
         `/sbin/mkfs -t ext4 -q /root/virtual/$username.ext4 -F`;
         my $FH = xIO::openLock('/etc/fstab', 'w');
         print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0\n";
@@ -61,8 +80,8 @@ sub AddUser
         chmod 0750, $WWWDir . '/config';
         
         # Create config files
-        `echo "524288000" > $WWWDir/config/diskquota`;
-        `echo "2147483648" > $WWWDir/config/bandwith`;
+        `echo "$quota" > $WWWDir/config/diskquota`;
+        `echo "$bandwith" > $WWWDir/config/bandwith`;
         
         # Chown and chmod logs dir for root only
         mkdir $WWWDir . '/logs';

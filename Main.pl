@@ -60,8 +60,8 @@ $| = 1;
         },
 
         'SYS_UserAdd' => sub {
-            my($socket, $username, $password) = @_;
-            return xSYS::AddUser($config, $username, $password);
+            my($socket, $username, $password, $plan) = @_;
+            return xSYS::AddUser($config, $username, $password, $plan);
         },
         
         'SYS_UserDel' => sub {
