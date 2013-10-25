@@ -54,8 +54,8 @@ sub AddUser
         chmod 0750, $WWWDir . '/config';
         
         # Create config files
-        `echo "524288000" > $WWWDir/config/diskquota`
-        `echo "2147483648" > $WWWDir/config/bandwith`
+        `echo 524288000 > $WWWDir/config/diskquota`
+        `echo 2147483648 > $WWWDir/config/bandwith`
         
         # Chown and chmod logs dir for root only
         mkdir $WWWDir . '/logs';
