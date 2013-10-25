@@ -79,6 +79,12 @@ sub setFreeSpace()
     $self->{_freeSpace} = $freeSpace;
 }
 
+sub substractSpace()
+{
+    my($self, $space) = @_;
+    $self->{_freeSpace} -= $space;
+}
+
 1;
 
 __END__

@@ -8,11 +8,12 @@ sub AddUser
 {
     my($config, $username, $password) = @_;
     
-    # Check, just in case
-    if ($config->getFreeSpace() < 500*1024*1024)
+    # Check that we have 1/2 more than the required space, just in case
+    if ($config->getFreeSpace() < 524288000 + (524288000 / 2))
     {
         return 1;
     }
+    $config->substractSpace(524288000);
     
     my $salt = `mkpasswd.pl`;
     my $md5Pass = main::unix_md5_crypt($password, $salt);
