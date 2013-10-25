@@ -54,6 +54,10 @@ $| = 1;
             $stop = 1;
             return 0;
         },
+        
+        'SYS_FreeSpace' => sub {
+            return $config->getFreeSpace();
+        },
 
         'SYS_UserAdd' => sub {
             my($socket, $username, $password) = @_;
@@ -76,19 +80,22 @@ $| = 1;
         }
     );
     
-    # Create lock file if it does not exist
-    unless (-e $config->getBaseDir() . '.lck')
-    {
-        my $dir = $config->getBaseDir();
-        `touch $dir.lck`;
-    }
+    # Set free space
+    my $dir = chop($config->getWWWDir()); # Delete the last /
+    $freeSpace = `df $dir | head -2 | tail -1 | awk '{print $4}'`;
+    $config->setFreeSpace($freeSpace);
 
+    # Fork and start setting variables
     my $pid = fork;
     my $socket = undef;
     my $socketPath = '/var/run/xmanager.sock';
 
     sub sockconnect
     {
+        # Only for parent!
+        if ($pid == 0)
+            return;
+        
         unlink($socketPath);
         $socket = IO::Socket::UNIX->new(
                Type     => SOCK_STREAM,

@@ -8,6 +8,12 @@ sub AddUser
 {
     my($config, $username, $password) = @_;
     
+    # Check, just in case
+    if ($config->getFreeSpace() < 500*1024*1024)
+    {
+        return 1;
+    }
+    
     my $salt = `mkpasswd.pl`;
     my $md5Pass = main::unix_md5_crypt($password, $salt);
 
@@ -23,7 +29,7 @@ sub AddUser
     my $result = system(@args);
     if ($result != 0)
     {
-        return $result;
+        return 2;
     }
     
     # We'll create a mount point!

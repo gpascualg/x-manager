@@ -12,6 +12,7 @@ sub new
         _sitesAvailable     => '/etc/nginx/sites-available',
         _sitesEnabled       => '/etc/nginx/sites-enabled',
         _domainName         => 'populohosting.com',
+        _freeSpace          => 0,
     };
     
     bless $self, $class;
@@ -64,6 +65,18 @@ sub getSitesEnabledDir()
 {
     my($self) = @_;
     return $self->{_sitesEnabled};
+}
+
+sub getFreeSpace()
+{
+    my($self) = @_;
+    return $self->{_freeSpace};
+}
+
+sub setFreeSpace()
+{
+    my($self, $freeSpace) = @_;
+    $self->{_freeSpace} = $freeSpace;
 }
 
 1;
