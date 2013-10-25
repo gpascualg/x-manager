@@ -80,7 +80,7 @@ $| = 1;
         }
     );
     
-    # Set free space
+    # Set free space (in MB)
     my $dir = $config->getWWWDir();
     chop($dir); # Delete the last /
     my $freeSpace = `df $dir | head -2 | tail -1 | awk '{print \$4}'`;
