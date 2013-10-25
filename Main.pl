@@ -80,11 +80,20 @@ $| = 1;
         }
     );
     
-    # Set free space (in MB)
-    my $dir = $config->getWWWDir();
-    chop($dir); # Delete the last /
-    my $freeSpace = `df $dir | head -2 | tail -1 | awk '{print \$4}'`;
-    $config->setFreeSpace($freeSpace);
+    # Get space in /
+    my $freeSpace = `df / | head -2 | tail -1 | awk '{print \$4}'`;
+    my $usedLoop = `df | grep /dev/loop | awk '{print \$2 " " \$3}'`;
+    my @loops = split("\n", $usedLoop);
+    
+    # We substract total loop space, and add used space (as it has already been substracted from rootfs)
+    foreach $loop (@loops)
+    {
+        my @params = split(" ", $loop);
+        $freeSpace -= $params[0];
+        $freeSpace += $params[1];
+    }
+        
+    $config->setFreeSpace($freeSpace);    
 
     # Fork and start setting variables
     my $pid = fork;
