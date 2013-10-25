@@ -93,7 +93,12 @@ $| = 1;
         $freeSpace += $params[1];
     }
         
-    $config->setFreeSpace($freeSpace);    
+    $config->setFreeSpace($freeSpace);  
+        
+    # Find how many loops we have
+    my $availableLoops = `ls /dev/loop* | egrep 'loop[0-9]+$'`;
+    my $totalLoops = chop($availableLoops);
+    $config->setLoops($totalLoops + 1);
 
     # Fork and start setting variables
     my $pid = fork;

@@ -71,6 +71,15 @@ sub AddUser
         print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0\n";
         xIO::closeLock($FH);
         
+        # Checkloops
+        my $loop = $config->pullLoop();
+        if ($loop)
+        {
+            # We must create another loop
+            `mknod -m640 /dev/loop$loop b 7 $loop`;
+            `chown root:disk /dev/loop$loop`;
+        }
+        
         # Mount it
         `mount /www/$username`;
         
