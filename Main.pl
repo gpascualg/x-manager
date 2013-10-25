@@ -96,7 +96,7 @@ $| = 1;
     $config->setFreeSpace($freeSpace);  
         
     # Find how many loops we have
-    my $availableLoops = `ls /dev/loop* | egrep 'loop[0-9]+$'`;
+    my $availableLoops = `ls /dev/loop* | egrep 'loop[0-9]+\$'`;
     my $totalLoops = chop($availableLoops);
     $config->setLoops($totalLoops + 1);
 
