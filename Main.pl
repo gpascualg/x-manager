@@ -97,7 +97,7 @@ $| = 1;
         
     # Find how many loops we have
     my $availableLoops = `ls /dev/loop* | egrep 'loop[0-9]+\$'`;
-    my $totalLoops = chop($availableLoops);
+    my $totalLoops = substr($availableLoops, -2, 1);
     $config->setLoops($totalLoops + 1);
 
     # Fork and start setting variables
