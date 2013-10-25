@@ -79,7 +79,7 @@ $| = 1;
     # Create lock file if it does not exist
     unless (-e $config->getBaseDir() . '.lck')
     {
-        $dir = $config->getBaseDir();
+        my $dir = $config->getBaseDir();
         `touch $dir.lck`;
     }
 
