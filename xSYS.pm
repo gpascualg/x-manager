@@ -58,6 +58,9 @@ sub AddUser
     $WWWDir = $config->getWWWDir($username);
     mkdir $WWWDir;
     chown "root", "root", $WWWDir;
+    
+    # Loops should be checked on main
+    my $loop = $config->pullLoop();
 
     # Create the mount file of 500MB
     # Do it in a separated fork, as to avoid locking out users
@@ -68,11 +71,10 @@ sub AddUser
         `truncate -s $quota /root/virtual/$username.ext4`;
         `/sbin/mkfs -t ext4 -q /root/virtual/$username.ext4 -F`;
         my $FH = xIO::openLock('/etc/fstab', 'w');
-        print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0\n";
+        print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota,noatime  0 0\n";
         xIO::closeLock($FH);
         
-        # Checkloops
-        my $loop = $config->pullLoop();
+        # Check loops
         if ($loop)
         {
             # We must create another loop
