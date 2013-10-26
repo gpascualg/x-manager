@@ -18,7 +18,14 @@ package xSYS;
     2 => 21474836480
 );
 
-$SIG{CHLD}= 'IGNORE';
+use POSIX qw(:sys_wait_h);
+sub REAPER 
+{
+   while ((my $pid = waitpid(-1,WNOHANG)) > 0) {
+        # do nothing
+   }
+   $SIG{CHLD} = \&REAPER;
+}
 
 sub AddUser
 {
