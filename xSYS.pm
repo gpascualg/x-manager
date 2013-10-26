@@ -49,11 +49,12 @@ sub REAPER {
     $SIG{CHLD} = \&REAPER;          # in case of unreliable signals
 } 
 
-my $userAddQueue = Thread::Queue->new();
+my $userAddQueue = undef;
 my $userThread = undef;
 
 sub initialize
 {
+    $userAddQueue = Thread::Queue->new();
     $userThread = threads->create(
         sub {
             while (defined(my $user = $userAddQueue->dequeue())) {
