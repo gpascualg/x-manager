@@ -141,6 +141,7 @@ $| = 1;
     }
     else
     {
+        xSYS::initialize();
         sockconnect();
         $sysadmin = 1;
     }
@@ -181,6 +182,7 @@ $| = 1;
     
     if ($pid)
     {
+        xSYS::deinitialize();
         kill 1, $pid;
     }
     

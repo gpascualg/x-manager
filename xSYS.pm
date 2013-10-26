@@ -50,31 +50,35 @@ sub REAPER {
 } 
 
 my $userAddQueue = Thread::Queue->new();
+my $userThread = undef;
 
-my $userThread = threads->create(
-    sub {
-        while (defined(my $user = $userAddQueue->dequeue())) {
-            my @params = split(' ', $user);
+sub initialize
+{
+    $userThread = threads->create(
+        sub {
+            while (defined(my $user = $userAddQueue->dequeue())) {
+                my @params = split(' ', $user);
+                
+                @args = (
+                    '/usr/sbin/useradd', 
+                    '-s', '/usr/sbin/nologin',
+                    '-g', $params[2],
+                    '-d', $params[3], 
+                    '-p', $params[1],
+                    $params[0]
+                );
             
-            @args = (
-                '/usr/sbin/useradd', 
-                '-s', '/usr/sbin/nologin',
-                '-g', $params[2],
-                '-d', $params[3], 
-                '-p', $params[1],
-                $params[0]
-            );
-        
-            $result = system(@args);
-            if ($result != 0)
-            {
-                print "Could not add: /$user/ due to: $result\n";
+                $result = system(@args);
+                if ($result != 0)
+                {
+                    print "Could not add: /$user/ due to: $result\n";
+                }
             }
         }
-    }
-);
+    );
+}
 
-sub end
+sub deinitialize
 {
     $userAddQueue->end();
     $userThread->join();
