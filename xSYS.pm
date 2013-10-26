@@ -1,7 +1,10 @@
 #!/usr/bin/perl
 
 use Crypt::PasswdMD5;
-
+use POSIX ":sys_wait_h";
+use threads;
+use Thread::Queue;
+    
 package xSYS;
 
 # In B
@@ -18,6 +21,65 @@ package xSYS;
     2 => 21474836480
 );
 
+my $forked = 0;
+$SIG{CHLD} = \&REAPER;
+sub REAPER {
+    my $pid = waitpid(-1, POSIX::WNOHANG);
+    if ($pid == -1) {
+        # no child waiting.  Ignore it.
+    } 
+    elsif (main::WIFEXITED($?)) 
+    {
+        if ($forked > 0)
+        {
+            --$forked;
+            if ($forked == 0)
+            {
+                # Free RAM! Commands above abuse it
+                `sync`;
+                `echo 3 > /proc/sys/vm/drop_caches`;
+            }
+        }
+    } 
+    else 
+    {
+        #print "False alarm on $pid.\n";
+    }
+    
+    $SIG{CHLD} = \&REAPER;          # in case of unreliable signals
+} 
+
+my $userAddQueue = Thread::Queue->new();
+
+my $userThread = threads->create(
+    sub {
+        while (defined(my $user = $userAddQueue->dequeue())) {
+            my @params = split(' ', $user);
+            
+            @args = (
+                '/usr/sbin/useradd', 
+                '-s', '/usr/sbin/nologin',
+                '-g', ,
+                '-d', , 
+                '-p', $md5_pass,
+                "$username"
+            );
+        
+            $result = system(@args);
+            if ($result != 0)
+            {
+                print "Could not add: /$user/ due to: $result\n";
+            }
+        }
+    }
+);
+
+sub end
+{
+    $userAddQueue->end();
+    $userThread->join();
+}
+    
 sub AddUser
 {
     my($config, $username, $password, $plan) = @_;
@@ -33,39 +95,35 @@ sub AddUser
         return 1;
     }
     
-    my $salt = `mkpasswd.pl`;
-    my $md5Pass = main::unix_md5_crypt($password, $salt);
-
-    @args = (
-        '/usr/sbin/useradd', 
-        '-s', '/usr/sbin/nologin',
-        '-g', $config->getWWWGroup(),
-        '-d', $config->getWWWDir($username), 
-        '-p', $md5_pass,
-        "$username"
-    );
-    
-    my $result = system(@args);
-    if ($result != 0)
+    if (getpwnam($username))
     {
         return 2;
-    }
+    }    
     
-    $config->substractSpace($quotaMB);
-    
-    # We'll create a mount point!
-    # Chown and chmod base dir for root only
-    $WWWDir = $config->getWWWDir($username);
-    mkdir $WWWDir;
-    chown "root", "root", $WWWDir;
+    # Create user (enqueue it)
+    my $salt = `mkpasswd.pl`;
+    my $md5Pass = main::unix_md5_crypt($password, $salt);        
+    my $group = $config->getWWWGroup();
+    my $home = $config->getWWWDir($username);
+    $userAddQueue->enqueue("$username $md5Pass $group $home");
     
     # Loops should be checked on main
     my $loop = $config->pullLoop();
-
-    # Create the mount file of 500MB
-    # Do it in a separated fork, as to avoid locking out users
+    
+    # Increase forked count
+    ++$forked;
+    
+    # Substract free space
+    $config->substractSpace($quotaMB);
+    
     unless (fork)
     {    
+        # We'll create a mount point!
+        # Chown and chmod base dir for root only
+        $WWWDir = $config->getWWWDir($username);
+        mkdir $WWWDir;
+        chown "root", "root", $WWWDir;
+
         # Modify fstab
         my $FH = xIO::openLock('/etc/fstab', 'w');
         print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0\n";
@@ -101,10 +159,6 @@ sub AddUser
         mkdir $WWWDir . '/logs';
         chown "root", "root", $WWWDir . '/logs';
         chmod 0750, $WWWDir . '/logs';
-        
-        # Free RAM! Commands above abuse it
-        `sync`;
-        `echo 3 > /proc/sys/vm/drop_caches`;
         
         exit;
     }
