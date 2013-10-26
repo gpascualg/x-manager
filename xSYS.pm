@@ -99,6 +99,10 @@ sub AddUser
         chown "root", "root", $WWWDir . '/logs';
         chmod 0750, $WWWDir . '/logs';
         
+        # Free RAM! Commands above abuse it
+        `sync`;
+        `echo 3 > /proc/sys/vm/drop_caches`;
+        
         exit;
     }
     
