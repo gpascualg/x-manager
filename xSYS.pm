@@ -18,14 +18,24 @@ package xSYS;
     2 => 21474836480
 );
 
+my $forked = 0;
 use POSIX qw(:sys_wait_h);
 sub REAPER 
 {
-   while ((my $pid = waitpid(-1,WNOHANG)) > 0) {
-        # do nothing
-   }
-   $SIG{CHLD} = \&REAPER;
+    while ((my $pid = waitpid(-1,WNOHANG)) > 0) {
+        sleep 1;
+    }
+    
+    # Free only if no forked process
+    if ($forked == 0)
+    {
+        # Free RAM! Commands above abuse it
+        `sync`;
+        `echo 3 > /proc/sys/vm/drop_caches`;
+    }
 }
+
+$SIG{CHLD} = \&REAPER;
 
 sub AddUser
 {
@@ -73,6 +83,7 @@ sub AddUser
 
     # Create the mount file of 500MB
     # Do it in a separated fork, as to avoid locking out users
+    ++$forked;
     unless (fork)
     {    
         # Modify fstab
