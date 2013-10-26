@@ -87,6 +87,12 @@ sub substractSpace()
     $self->{_freeSpace} -= $space;
 }
 
+sub addSpace()
+{
+    my($self, $space) = @_;
+    $self->{_freeSpace} += $space;
+}
+
 sub setLoops()
 {
     my($self, $loops) = @_;

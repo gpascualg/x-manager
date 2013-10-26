@@ -116,6 +116,22 @@ sub DelUser
 {
     my($config, $username) = @_;
     
+    # Delete user
+    @args = (
+        '/usr/sbin/userdel',
+        '-r',
+        "$username"
+    );
+    
+    # Execute and ignore mail/home directories errors
+    if (system(@args) & ~3072)
+    {
+        return 1;
+    }
+    
+    # Readd space
+    $config->addSpace(`head -1 /www/$username/config/diskquota`);
+    
     # Unmount filesystem and delete
     `umount /www/$username`;
     `rm -rf /www/$username`;
@@ -146,15 +162,7 @@ sub DelUser
         }
     }
     
-    # Delete user
-    @args = (
-        '/usr/sbin/userdel',
-        '-r',
-        "$username"
-    );
-    
-    # Execute and ignore mail/home directories errors
-    return (system(@args) & ~3072);
+    return 0;
 }
 
 sub CalculateQuota
