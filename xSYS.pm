@@ -68,7 +68,7 @@ sub AddUser
     {    
         # Modify fstab
         my $FH = xIO::openLock('/etc/fstab', 'w');
-        print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota,noatime  0 0\n";
+        print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0\n";
         xIO::closeLock($FH);
     
         # Create the LVM
