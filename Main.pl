@@ -216,9 +216,6 @@ $| = 1;
 
         $socket->send(pack("I", $ret));
     }
-
-    my $user = new xUser($config, "login_user", "md5_pass");
-    $user->authentificate();
 }
 
 sub closeSocket
