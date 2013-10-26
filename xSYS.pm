@@ -66,13 +66,16 @@ sub AddUser
     # Do it in a separated fork, as to avoid locking out users
     unless (fork)
     {    
+        # Modify fstab
+        my $FH = xIO::openLock('/etc/fstab', 'w');
+        print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota,noatime  0 0\n";
+        xIO::closeLock($FH);
+    
+        # Create the LVM
         `touch /root/virtual/$username.ext4`;
         #`dd if=/dev/zero of=/root/virtual/$username.ext4 count=1024000`;
         `truncate -s $quota /root/virtual/$username.ext4`;
         `/sbin/mkfs -t ext4 -q /root/virtual/$username.ext4 -F`;
-        my $FH = xIO::openLock('/etc/fstab', 'w');
-        print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota,noatime  0 0\n";
-        xIO::closeLock($FH);
         
         # Check loops
         if ($loop)
