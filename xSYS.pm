@@ -18,6 +18,8 @@ package xSYS;
     2 => 21474836480
 );
 
+$SIG{CHLD}= 'IGNORE';
+
 sub AddUser
 {
     my($config, $username, $password, $plan) = @_;
