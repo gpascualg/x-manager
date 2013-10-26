@@ -59,10 +59,10 @@ my $userThread = threads->create(
             @args = (
                 '/usr/sbin/useradd', 
                 '-s', '/usr/sbin/nologin',
-                '-g', ,
-                '-d', , 
-                '-p', $md5_pass,
-                "$username"
+                '-g', $params[2],
+                '-d', $params[3], 
+                '-p', $params[1],
+                $params[0]
             );
         
             $result = system(@args);
