@@ -67,7 +67,7 @@ sub setupSubdomain
     my($self, $htmlDir) = @_;
     
     my $username = $self->{_username};
-    unless (-e $self{_config}->getBaseDir() . 'virtual/' . $username . '.ext4')
+    unless (-e $self->{_config}->getBaseDir() . 'virtual/' . $username . '.ext4')
     {
         return 1;
     }
@@ -95,7 +95,7 @@ sub setupSubdomain
         my $logsPath = $self->{_config}->getWWWDir($username) . '/logs';
         
         mkdir $publicHTMLPath;
-        chown $username, $self{_config}->getWWWGroup(), $publicHTMLPath;
+        chown $username, $self->{_config}->getWWWGroup(), $publicHTMLPath;
         chmod 0644, $publicHTMLPath;
         
         # Make a copy of the template file
