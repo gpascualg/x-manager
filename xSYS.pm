@@ -129,16 +129,18 @@ sub AddUser
         mkdir $WWWDir;
         chown "root", "root", $WWWDir;
 
+        my $virtualFile = $config->getBaseDir() . 'virtual/' . $username . '.ext4';
+        
         # Modify fstab
         my $FH = xIO::openLock('/etc/fstab', 'w');
-        print $FH "/root/virtual/$username.ext4    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0\n";
+        print $FH "$virtualFile    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0\n";
         xIO::closeLock($FH);
     
         # Create the LVM
-        `touch /root/virtual/$username.ext4`;
+        `touch $virtualFile`;
         #`dd if=/dev/zero of=/root/virtual/$username.ext4 count=1024000`;
-        `truncate -s $quota /root/virtual/$username.ext4`;
-        `/sbin/mkfs -t ext4 -q /root/virtual/$username.ext4 -F`;
+        `truncate -s $quota $virtualFile`;
+        `/sbin/mkfs -t ext4 -q $virtualFile -F`;
         
         # Check loops
         if ($loop)

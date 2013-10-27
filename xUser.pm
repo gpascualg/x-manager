@@ -62,21 +62,53 @@ sub authentificate
 
 sub setupSubdomain
 {
-    my($self, $htmlDir, $pool) = @_;
+    my($self, $htmlDir) = @_;
     
-    # Make public_html folder, chown and chmod
-    my $domain = $self->{_config}->getHTMLDefaultDomain($username, $htmlDir);    
-    my $wwwDir = $self->{_config}->getWWWDir($username);
-    my $publicHTMLPath = $wwwDir . '/' . $domain;
-    my $logsPath = $self->{_config}->getWWWDir($username) . '/logs';
+    unless (-e $config->getBaseDir() . 'virtual/' . $self->{_username} . '.ext4')
+    {
+        return 1;
+    }
     
-    mkdir $publicHTMLPath;
-    chown $username, $config->getWWWGroup(), $publicHTMLPath;
-    chmod 0644, $publicHTMLPath;
+    # We fork because the website may not be created
+    unless (fork)
+    {
+        # Make public_html folder, chown and chmod
+        my $domain = $self->{_config}->getHTMLDefaultDomain($username, $htmlDir);    
+        my $wwwDir = $self->{_config}->getWWWDir($username);
+        my $publicHTMLPath = $wwwDir . '/' . $domain;
+        my $logsPath = $self->{_config}->getWWWDir($username) . '/logs';
+        
+        mkdir $publicHTMLPath;
+        chown $username, $config->getWWWGroup(), $publicHTMLPath;
+        chmod 0644, $publicHTMLPath;
+        
+        # Make a copy of the template file
+        $templateSitesFile = $self->{_config}->getSitesAvailableDir() . '/template';
+        $domainSitesFile = $self->{_config}->getSitesAvailableDir() . '/' . $domain;
+        `cp $templateSitesFile $domainSitesFile`;
+        
+        # Open file and replace
+        my $FH = undef;
+        if (open($FH, "<$domainSitesFile"))
+        {
+            my @lines = <$FH>;
+            close($FH);
+            
+            my %findreplace = (
+                '{SERVER_ROOT}' => $publicHTMLPath,
+                '{SERVER_NAME}' => $domain
+            );
+            my @newlines = xSYS::FindAndReplace(\@lines, \%findreplace);
+            
+            if (open($FH, ">$domainSitesFile"))
+            {
+                print $FH @newlines;
+                close($FH);
+            }
+        }
+    }
     
-    my $FH = xIO::openLock($self->{_config}->getSitesAvailableDir() . '/' . $domain);
-    
-    xIO::closeLock($FH);
+    return 0;
 }
 
 sub getBandwith

@@ -51,10 +51,10 @@ sub getHTMLDefaultDomain
     
     if ($htmlDir == "")
     {
-        return $username . $self->getHTMLDefaultDir();
+        return $username . '.' . $self->getHTMLDefaultDir();
     }
     
-    return $username . $htmlDir;
+    return $htmlDir;
 }
 
 sub getSitesAvailableDir()
