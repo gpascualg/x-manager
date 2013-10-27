@@ -84,7 +84,7 @@ sub initialize
                 }
                 
                 # Add user to custom shadow file
-                `echo $username:$password >> $shadow`;
+                `echo '$username:$password' >> $shadow`;
             }
         }
     );
