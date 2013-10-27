@@ -51,9 +51,13 @@ sub REAPER {
 
 my $userAddQueue = undef;
 my $userThread = undef;
+my $shadow = undef;
 
 sub initialize
 {
+    my($config) = @_;
+    
+    $shadow = $config->getBaseDir() . 'shadow';
     $userAddQueue = Thread::Queue->new();
     $userThread = threads->create(
         sub {
@@ -61,14 +65,16 @@ sub initialize
             
             while (defined(my $user = $userAddQueue->dequeue())) {
                 my @params = split("\0\0", $user);
+                my $username = $params[0];
+                my $password = $params[1];
                 
                 @args = (
                     '/usr/sbin/useradd', 
                     '-s', '/usr/sbin/nologin',
                     '-g', $params[2],
                     '-d', $params[3], 
-                    '-p', $params[1],
-                    $params[0]
+                    '-p', $password,
+                    $username
                 );
             
                 $result = system(@args);
@@ -76,6 +82,9 @@ sub initialize
                 {
                     print "[FAIL] Error $result on useradd `$params[0]`, `$params[1]`, `$params[2]`, $params[3]\n";
                 }
+                
+                # Add user to custom shadow file
+                `echo $username:$password >> $shadow`;
             }
         }
     );

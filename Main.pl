@@ -146,7 +146,7 @@ $| = 1;
     }
     else
     {
-        xSYS::initialize();
+        xSYS::initialize($config);
         sockconnect();
         $sysadmin = 1;
     }
