@@ -60,7 +60,7 @@ sub initialize
             $SIG{'KILL'} = sub { threads->exit(); };
             
             while (defined(my $user = $userAddQueue->dequeue())) {
-                my @params = split(' ', $user);
+                my @params = split("\0\0", $user);
                 
                 @args = (
                     '/usr/sbin/useradd', 
@@ -74,7 +74,7 @@ sub initialize
                 $result = system(@args);
                 if ($result != 0)
                 {
-                    print "[FAIL] Could useradd `$params[0]` <=> `$user`";
+                    print "[FAIL] Could useradd `$params[0]`, `$params[1]`, `$params[2]`, $params[3]\n";
                 }
             }
         }
@@ -111,7 +111,7 @@ sub AddUser
     my $md5Pass = main::unix_md5_crypt($password, $salt);        
     my $group = $config->getWWWGroup();
     my $home = $config->getWWWDir($username);
-    $userAddQueue->enqueue("$username $md5Pass $group $home");
+    $userAddQueue->enqueue("$username\0\0$md5Pass\0\0$group\0\0$home");
     
     # Loops should be checked on main
     my $loop = $config->pullLoop();
