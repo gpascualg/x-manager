@@ -13,7 +13,7 @@ sub new
     my $self = {
         _config     => shift,
         _username   => shift,
-        _privKey    => shift,
+        _md5Pass    => shift,
         _sysadmin   => shift,
     };
     
@@ -47,15 +47,15 @@ sub authentificate
             # [1] = Password (hash$password)
             if ($fields[0] eq $self->{_username})
             {
-                my @password = split('$', $fields[1], 2);
-                my $md5Priv = main::unix_md5_crypt($password[1], $password[0]);
+                my @password = split('$', $fields[1]);
+                my $md5Priv = main::unix_md5_crypt($password[3], $password[2]);
                 
-                if ($md5Priv == $self->{_privKey})
+                if ($md5Priv eq $fields[1])
                 {
+                    $self->{_md5Pass} = $password[3];
                     return 0;
                 }
             }
-            $total += int($fields[1]);
         }
     }
     
