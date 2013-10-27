@@ -51,6 +51,8 @@ sub REAPER {
 
 my $userQueue = undef;
 my $userThread = undef;
+my $fstabQueue = undef;
+my $fstabThread = undef;
 my $shadow = undef;
 
 sub initialize
@@ -135,11 +137,60 @@ sub initialize
             }
         }
     );
+    
+    $fstabQueue = Thread::Queue->new();
+    $fstabThread = threads->create(
+        sub {
+            $SIG{'KILL'} = sub { threads->exit(); };
+            
+            while (defined(my $action = $fstabQueue->dequeue())) {
+                my @params = split("\0\0", $action, 2);
+                my $mode = $params[0];
+                my $args = $params[1];
+                
+                # Add to fstab
+                if ($mode == 0)
+                {
+                    my $FH = xIO::openLock('/etc/fstab', 'w');
+                    print $FH $args;
+                    xIO::closeLock($FH);
+                }
+                else
+                {
+                    # Delete user from fstab
+                    my $FH = xIO::openLock('/etc/fstab', 'r');
+                    if ($FH != 0)
+                    {
+                        my @lines = <$FH>;
+                        xIO::closeLock($FH);
+                        
+                        my @newlines;                            
+                        foreach $line (@lines)
+                        {
+                            # TODO: This regex should be done with an escaped version of $WWWDir
+                            if (not ($line =~ m/$args/))
+                            {                
+                                push(@newlines, $line);
+                            }
+                        }
+                            
+                        $FH = xIO::openLock('/etc/fstab', 'w+');
+                        if ($FH != 0)
+                        {                            
+                            print $FH @newlines;
+                            xIO::closeLock($FH);
+                        }
+                    }
+                }
+            }
+        }
+    );
 }
 
 sub deinitialize
 {
     $userThread->kill('KILL')->detach();
+    $fstabThread->kill('KILL')->detach();
 }
     
 sub AddUser
@@ -147,9 +198,9 @@ sub AddUser
     my($config, $username, $password, $plan) = @_;
     
     # Setup configurations
-    $quota = $planToQuota{$plan};
-    $quotaMB = $quota / 1024;
-    $bandwith = $planToBandwith{$plan};
+    my $quota = $planToQuota{$plan};
+    my $quotaMB = $quota / 1024;
+    my $bandwith = $planToBandwith{$plan};
     
     # Check that we have 1/2 more than the required space, just in case
     if ($config->getFreeSpace() < $quotaMB + ($quotaMB / 2))
@@ -157,6 +208,7 @@ sub AddUser
         return 1;
     }
     
+    # If the user exists, return
     if (getpwnam($username))
     {
         return 2;
@@ -178,6 +230,11 @@ sub AddUser
     # Substract free space
     $config->substractSpace($quotaMB);
     
+    # Enqueue fstab modification
+    my $virtualFile = $config->getBaseDir() . 'virtual/' . $username . '.ext4';
+    $fstabQueue->enqueue("0\0\0$virtualFile    $WWWDir ext4    rw,loop,noexec,usrquota,grpquota  0 0\n");
+    
+    # Fork because it may take a while depending on file size
     unless (fork)
     {    
         # We'll create a mount point!
@@ -185,14 +242,7 @@ sub AddUser
         my $WWWDir = $config->getWWWDir($username);
         mkdir $WWWDir;
         chown "root", "root", $WWWDir;
-
-        my $virtualFile = $config->getBaseDir() . 'virtual/' . $username . '.ext4';
-        
-        # Modify fstab
-        my $FH = xIO::openLock('/etc/fstab', 'w');
-        print $FH "$virtualFile    $WWWDir ext4    rw,loop,noexec,usrquota,grpquota  0 0\n";
-        xIO::closeLock($FH);
-    
+            
         # Create the LVM
         `touch $virtualFile`;
         #`dd if=/dev/zero of=$virtualFile count=1024000`;
@@ -268,31 +318,8 @@ sub DelUser
     `rm -f $virtualFile`;
 
     # Delete user from fstab
-    $FH = xIO::openLock('/etc/fstab', 'r');
-    if ($FH != 0)
-    {
-        my @lines = <$FH>;
-        xIO::closeLock($FH);
+    $fstabQueue->enqueue("1\0\0 \/www\/$username ");
         
-        $FH = xIO::openLock('/etc/fstab', 'w+');
-        if ($FH != 0)
-        {
-            my @newlines;
-                
-            foreach $line (@lines)
-            {
-                # TODO: This regex should be done with an escaped version of $WWWDir
-                if (not ($line =~ m/ \/www\/$username /))
-                {                
-                    push(@newlines, $line);
-                }
-            }
-            
-            print $FH @newlines;
-            xIO::closeLock($FH);
-        }
-    }
-    
     return 0;
 }
 
