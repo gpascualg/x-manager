@@ -257,8 +257,8 @@ sub AddUser
             `chown root:disk /dev/loop$loop`;
         }
         
-        # Mount it
-        `mount $WWWDir`;
+        # Mount using the whole command, as fstab modification may not be ready yet
+        `mount -o loop,rw,usrquota,grpquota,noexec $virtualFile $WWWDir`;
         
         # Chown and chmod config dir for root only
         mkdir $WWWDir . '/config';
