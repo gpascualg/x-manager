@@ -107,13 +107,13 @@ sub initialize
                     }
 
                     # Delete user from shadow
-                    open(my $FH "<$shadow");
+                    open(my $FH, "<$shadow");
                     if ($FH != 0)
                     {
                         my @lines = <$FH>;
                         close($FH);
                         
-                        open(my $FH ">$shadow");
+                        open($FH, ">$shadow");
                         if ($FH != 0)
                         {
                             my @newlines;
