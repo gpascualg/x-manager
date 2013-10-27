@@ -64,9 +64,8 @@ sub authentificate
 
 sub setupSubdomain
 {
-    my($self, $htmlDir) = @_;
+    my($self, $username, $htmlDir) = @_;
     
-    my $username = $self->{_username};
     unless (-e $self->{_config}->getWWWDir($username))
     {
         return 1;

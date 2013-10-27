@@ -70,8 +70,8 @@ $| = 1;
         },
         
         'SYS_DomainAdd' => sub {
-            my($socket, $domain) = @_;
-            return $clients{$socket}->setupSubdomain($domain);
+            my($socket, $username, $domain) = @_;
+            return $clients{$socket}->setupSubdomain($username, $domain);
         },
 
         'SYS_BandwithCalc' => sub {
