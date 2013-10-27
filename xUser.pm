@@ -122,6 +122,8 @@ sub setupSubdomain
                 close($FH);
             }
         }
+        
+        exit;
     }
     
     return 0;

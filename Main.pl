@@ -68,6 +68,11 @@ $| = 1;
             my($socket, $username) = @_;
             return xSYS::DelUser($config, $username);
         },
+        
+        'SYS_DomainAdd' => sub {
+            my($socket, $domain) = @_M
+            return $clients{$socket}->setupSubdomain($domain);
+        },
 
         'SYS_BandwithCalc' => sub {
             my($socket, $username) = @_;
