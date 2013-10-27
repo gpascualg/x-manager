@@ -434,16 +434,9 @@ sub BandwithCalculate
 sub GetQuota
 {
     my($config, $username) = @_;
-    my $f = $config->getWWWDir($username) . '/quota';
+    my $f = $config->getWWWDir($username) . '/config/diskquota';
     
-    if (open(FILE, "<$conf"))
-    {
-        my @lines = <FILE>;
-        close(FILE);
-        return int(String::Util::trim($lines[0]));
-    }
-    
-    return "";
+    return `head -1 $f`;
 }
 
 1;
