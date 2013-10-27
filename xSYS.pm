@@ -57,7 +57,7 @@ sub initialize
     $userAddQueue = Thread::Queue->new();
     $userThread = threads->create(
         sub {
-            while (defined(my $user = $userAddQueue->dequeue())) {
+            while (defined(my $user = $userAddQueue->dequeue_timed(5))) {
                 my @params = split(' ', $user);
                 
                 @args = (
