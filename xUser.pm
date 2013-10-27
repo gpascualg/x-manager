@@ -81,7 +81,7 @@ sub setupSubdomain
             {
                 sleep 1;
             }
-        }
+        };
         if ($@)
         {
             print "[FAIL] Could not create subdomain `$htmlDir` for `$username`";
