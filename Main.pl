@@ -70,7 +70,7 @@ $| = 1;
         },
         
         'SYS_DomainAdd' => sub {
-            my($socket, $domain) = @_M
+            my($socket, $domain) = @_;
             return $clients{$socket}->setupSubdomain($domain);
         },
 
