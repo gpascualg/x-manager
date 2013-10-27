@@ -273,7 +273,9 @@ sub AddUser
         mkdir $WWWDir . '/logs';
         chown "root", "root", $WWWDir . '/logs';
         chmod 0750, $WWWDir . '/logs';
+        `touch $WWWDir/logs/access.log`;
         
+        # Flag as ready
         `touch $WWWDir/config/.ready`;
         
         exit;
