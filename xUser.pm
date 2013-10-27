@@ -136,13 +136,25 @@ sub setupSubdomain
 sub getBandwith
 {
     my($self) = @_;
-    return xSYS::BandwithCalculate($self->{_config}, $self->{_username});
+    return xSYS::GetBandwith($self->{_config}, $self->{_username});
+}
+
+sub getUsedBandwith
+{
+    my($self) = @_;
+    return xSYS::CalculateBandwith($self->{_config}, $self->{_username});
 }
 
 sub getQuota
 {
     my($self) = @_;
     return xSYS::GetQuota($self->{_config}, $self->{_username});
+}
+
+sub getUsedQuota
+{
+    my($self) = @_;
+    return xSYS::CalculateQuota($self->{_config}, $self->{_username});
 }
     
 sub sanitize

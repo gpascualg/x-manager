@@ -39,14 +39,24 @@ $| = 1;
             return $result;
         },
 
-        'UsedBandwith' => sub {
+        'Banwidth' => sub {
             my($socket) = @_;
             return $clients{$socket}->getBandwith();
+        },
+
+        'UsedBandwith' => sub {
+            my($socket) = @_;
+            return $clients{$socket}->getUsedBandwith();
         },
 
         'Quota' => sub {
             my($socket) = @_;
             return $clients{$socket}->getQuota();
+        },
+
+        'UsedQuota' => sub {
+            my($socket) = @_;
+            return $clients{$socket}->getUsedQuota();
         },
 
         'SYS_DAEMON_STOP' => sub
@@ -74,14 +84,14 @@ $| = 1;
             return $clients{$socket}->setupSubdomain($username, $domain);
         },
 
-        'SYS_BandwithCalc' => sub {
+        'SYS_CheckBandwith' => sub {
             my($socket, $username) = @_;
-            return xSYS::CalculateQuota($config, $username);
+            return xSYS::CheckBandwidth($config, $username);
         },
 
-        'SYS_RestoreQuota' => sub {
+        'SYS_RestoreBandwidth' => sub {
             my($socket, $username) = @_;
-            return xSYS::RestoreQuota($config, $username);
+            return xSYS::RestoreBandwidth($config, $username);
         }
     );
     

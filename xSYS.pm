@@ -282,7 +282,7 @@ sub DelUser
             foreach $line (@lines)
             {
                 # TODO: This regex should be done with an escaped version of $WWWDir
-                if (not ($line =~ m/\/www\/$username/))
+                if (not ($line =~ m/ \/www\/$username /))
                 {                
                     push(@newlines, $line);
                 }
@@ -296,12 +296,12 @@ sub DelUser
     return 0;
 }
 
-sub CalculateQuota
+sub CheckBandwidth
 {
     my($config, $username) = @_;
     
-    my $sent = xSYS::BandwithCalculate($config, $username);
-    my $quota = xSYS::GetQuota($config, $username);
+    my $sent = xSYS::CalculateBandwith($config, $username);
+    my $quota = xSYS::GetBandwidth($config, $username);
 
     if ($sent >= $quota)
     {
@@ -344,7 +344,7 @@ sub CalculateQuota
     return 1;
 }
 
-sub RestoreQuota
+sub RestoreBandwidth
 {
     my($config, $username) = @_;
     
@@ -404,7 +404,7 @@ sub FindAndReplace
     return @newlines;
 }
 
-sub BandwithCalculate
+sub CalculateBandwith
 {
     my($config, $username) = @_;
     
@@ -431,12 +431,26 @@ sub BandwithCalculate
     return $total;
 }
 
+sub GetBandwith
+{
+    my($config, $username) = @_;
+    my $f = $config->getWWWDir($username) . '/config/bandwith';
+    
+    return `head -1 $f`;
+}
+
 sub GetQuota
 {
     my($config, $username) = @_;
     my $f = $config->getWWWDir($username) . '/config/diskquota';
     
     return `head -1 $f`;
+}
+
+sub CalculateQuota
+{
+    my($config, $username) = @_;
+    return `df | egrep ' /www/$username\$' | awk '{print \$3}'`;
 }
 
 1;
