@@ -74,7 +74,7 @@ sub initialize
                 $result = system(@args);
                 if ($result != 0)
                 {
-                    print "Could not add: /$user/ due to: $result\n";
+                    print "[FAIL] Could useradd `$params[0]` <=> `$user`";
                 }
             }
         }

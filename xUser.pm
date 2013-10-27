@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+use Time::Out qw(timeout) ;
+
 use xConfig;
 use xIO;
 use xSYS;
@@ -64,7 +66,8 @@ sub setupSubdomain
 {
     my($self, $htmlDir) = @_;
     
-    unless (-e $config->getBaseDir() . 'virtual/' . $self->{_username} . '.ext4')
+    my $username = $self->{_username};
+    unless (-e $config->getBaseDir() . 'virtual/' . $username . '.ext4')
     {
         return 1;
     }
@@ -72,6 +75,19 @@ sub setupSubdomain
     # We fork because the website may not be created
     unless (fork)
     {
+        # Wait for the device to be mounted (60 seconds time out)
+        timeout 60 => sub {
+            unless (`df | egrep ' /www/$username\$'`)
+            {
+                sleep 1;
+            }
+        }
+        if ($@)
+        {
+            print "[FAIL] Could not create subdomain `$htmlDir` for `$username`";
+            exit;
+        }
+        
         # Make public_html folder, chown and chmod
         my $domain = $self->{_config}->getHTMLDefaultDomain($username, $htmlDir);    
         my $wwwDir = $self->{_config}->getWWWDir($username);
