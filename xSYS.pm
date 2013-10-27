@@ -152,7 +152,7 @@ sub AddUser
         }
         
         # Mount it
-        `mount /www/$username`;
+        `mount $WWWDir`;
         
         # Chown and chmod config dir for root only
         mkdir $WWWDir . '/config';
@@ -229,6 +229,7 @@ sub DelUser
                 
             foreach $line (@lines)
             {
+                # TODO: This regex should be done with an escaped version of $WWWDir
                 if (not ($line =~ m/\/www\/$username/))
                 {                
                     push(@newlines, $line);
