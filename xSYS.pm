@@ -74,7 +74,7 @@ sub initialize
                 $result = system(@args);
                 if ($result != 0)
                 {
-                    print "[FAIL] Could useradd `$params[0]`, `$params[1]`, `$params[2]`, $params[3]\n";
+                    print "[FAIL] Error $result on useradd `$params[0]`, `$params[1]`, `$params[2]`, $params[3]\n";
                 }
             }
         }
@@ -204,6 +204,7 @@ sub DelUser
     open(my $FH, "<$WWWDir/config/hosts");
     while (my $line = <$FH>)
     {
+        chop($line); # Remove \n
         `rm $sitesEnabled/$line`;
         `rm $sitesAvailable/$line`;
     }
