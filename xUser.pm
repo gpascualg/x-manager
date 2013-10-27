@@ -79,9 +79,16 @@ sub setupSubdomain
     {
         # Wait for the device to be mounted (60 seconds time out) and everything done
         Time::Out::timeout 60 => sub {
-            unless (-e $wwwDir . '/config/.ready')
+            my $file = $wwwDir . '/config/.ready';
+            
+            while (1) 
             {
-                sleep 1;
+                if (-e $file)
+                {
+                    last;
+                }
+                
+                sleep(1);
             }
         };
         if ($@)
