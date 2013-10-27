@@ -72,7 +72,7 @@ sub setupSubdomain
         return 1;
     }
     
-    # We fork because the website may not be created
+    # We fork because the website may not be created yet, and we have to wait
     unless (fork)
     {
         # Wait for the device to be mounted (60 seconds time out)
@@ -105,6 +105,7 @@ sub setupSubdomain
         # Make a copy of the template file
         $templateSitesFile = $self->{_config}->getSitesAvailableDir() . '/template';
         $domainSitesFile = $self->{_config}->getSitesAvailableDir() . '/' . $domain;
+        $linkSitesFile = $self->{_config}->getSitesEnabledDir() . '/' . $domain;
         `cp $templateSitesFile $domainSitesFile`;
         
         # Open file and replace
@@ -116,7 +117,8 @@ sub setupSubdomain
             
             my %findreplace = (
                 '{SERVER_ROOT}' => $publicHTMLPath,
-                '{SERVER_NAME}' => $domain
+                '{SERVER_NAME}' => $domain,
+                '{SERVER_LOGS}' => $logsPath
             );
             my @newlines = xSYS::FindAndReplace(\@lines, \%findreplace);
             
@@ -126,6 +128,12 @@ sub setupSubdomain
                 close($FH);
             }
         }
+        
+        # Make a syslink
+        `ln -s $domainSitesFile $linkSitesFile`;
+        
+        # Nginx must be reloaded
+        `/etc/init.d/nginx reload`;
         
         exit;
     }
