@@ -67,7 +67,7 @@ sub setupSubdomain
     my($self, $htmlDir) = @_;
     
     my $username = $self->{_username};
-    unless (-e $self->{_config}->getBaseDir() . 'virtual/' . $username . '.ext4')
+    unless (-e $self->{_config}->getWWWDir($username))
     {
         return 1;
     }
