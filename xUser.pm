@@ -76,7 +76,7 @@ sub setupSubdomain
     unless (fork)
     {
         # Wait for the device to be mounted (60 seconds time out)
-        timeout 60 => sub {
+        Time::Out::timeout 60 => sub {
             unless (`df | egrep ' /www/$username\$'`)
             {
                 sleep 1;
