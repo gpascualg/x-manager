@@ -33,7 +33,7 @@ server {
         
         # Naxsi handling
         location /RequestDenied {
-            return 503;
+            return 400;
         }
 
         location ~ \.php$ {
