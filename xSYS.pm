@@ -49,7 +49,7 @@ sub REAPER {
     $SIG{CHLD} = \&REAPER;          # in case of unreliable signals
 } 
 
-my $userAddQueue = undef;
+my $userQueue = undef;
 my $userThread = undef;
 my $shadow = undef;
 
@@ -58,33 +58,80 @@ sub initialize
     my($config) = @_;
     
     $shadow = $config->getBaseDir() . 'shadow';
-    $userAddQueue = Thread::Queue->new();
+    $userQueue = Thread::Queue->new();
     $userThread = threads->create(
         sub {
             $SIG{'KILL'} = sub { threads->exit(); };
             
-            while (defined(my $user = $userAddQueue->dequeue())) {
+            while (defined(my $user = $userQueue->dequeue())) {
                 my @params = split("\0\0", $user);
-                my $username = $params[0];
-                my $password = $params[1];
+                my $mode = $params[0];
+                my $username = $params[1];
                 
-                @args = (
-                    '/usr/sbin/useradd', 
-                    '-s', '/usr/sbin/nologin',
-                    '-g', $params[2],
-                    '-d', $params[3], 
-                    '-p', $password,
-                    $username
-                );
-            
-                $result = system(@args);
-                if ($result != 0)
+                # Add user
+                if ($mode == 0)
                 {
-                    print "[FAIL] Error $result on useradd `$params[0]`, `$params[1]`, `$params[2]`, $params[3]\n";
-                }
+                    my $password = $params[2];
+                    
+                    @args = (
+                        '/usr/sbin/useradd', 
+                        '-s', '/usr/sbin/nologin',
+                        '-g', $params[3],
+                        '-d', $params[4], 
+                        '-p', $password,
+                        $username
+                    );
                 
-                # Add user to custom shadow file
-                `echo '$username:$password' >> $shadow`;
+                    $result = system(@args);
+                    if ($result != 0)
+                    {
+                        print "[FAIL] Error $result on useradd `$params[0]`, `$params[1]`, `$params[2]`, $params[3], $params[4]\n";
+                    }
+                    
+                    # Add user to custom shadow file
+                    `echo '$username:$password' >> $shadow`;
+                }
+                else
+                {
+                    # Delete user
+                    @args = (
+                        '/usr/sbin/userdel',
+                        '-r',
+                        "$username"
+                    );
+                        
+                    # Execute and ignore mail/home directories errors
+                    if (system(@args) & ~3072)
+                    {
+                        print "[FAIL] Error $result on userdel `$params[0]`, `$params[1]`\n";
+                    }
+
+                    # Delete user from shadow
+                    open(my $FH "<$shadow");
+                    if ($FH != 0)
+                    {
+                        my @lines = <$FH>;
+                        close($FH);
+                        
+                        open(my $FH ">$shadow");
+                        if ($FH != 0)
+                        {
+                            my @newlines;
+                                
+                            foreach $line (@lines)
+                            {
+                                # TODO: This regex should be done with an escaped version of $WWWDir
+                                if (not ($line =~ m/^$username:/))
+                                {                
+                                    push(@newlines, $line);
+                                }
+                            }
+                            
+                            print $FH @newlines;
+                            close($FH);
+                        }
+                    }
+                }
             }
         }
     );
@@ -120,7 +167,7 @@ sub AddUser
     my $md5Pass = main::unix_md5_crypt($password, $salt);        
     my $group = $config->getWWWGroup();
     my $home = $config->getWWWDir($username);
-    $userAddQueue->enqueue("$username\0\0$md5Pass\0\0$group\0\0$home");
+    $userQueue->enqueue("0\0\0$username\0\0$md5Pass\0\0$group\0\0$home");
     
     # Loops should be checked on main
     my $loop = $config->pullLoop();
@@ -187,18 +234,14 @@ sub DelUser
 {
     my($config, $username) = @_;
     
-    # Delete user
-    @args = (
-        '/usr/sbin/userdel',
-        '-r',
-        "$username"
-    );
-        
-    # Execute and ignore mail/home directories errors
-    if (system(@args) & ~3072)
+    # Does the user exist? If not, return error
+    unless (getpwnam($username))
     {
         return 1;
     }
+    
+    # Queue user for deleting
+    $userQueue->enqueue("1\0\0$username");
     
     # Set some variables
     my $WWWDir = $config->getWWWDir($username);
@@ -210,7 +253,7 @@ sub DelUser
     $config->addSpace(`head -1 $WWWDir/config/diskquota`);
     
     # Delete virtual hosts
-    open(my $FH, "<$WWWDir/config/hosts");
+    open($FH, "<$WWWDir/config/hosts");
     while (my $line = <$FH>)
     {
         chop($line); # Remove \n
