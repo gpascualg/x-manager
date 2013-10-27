@@ -57,6 +57,8 @@ sub initialize
     $userAddQueue = Thread::Queue->new();
     $userThread = threads->create(
         sub {
+            $SIG{'KILL'} = sub { threads->exit(); };
+            
             while (defined(my $user = $userAddQueue->dequeue())) {
                 my @params = split(' ', $user);
                 
@@ -81,8 +83,7 @@ sub initialize
 
 sub deinitialize
 {
-    $userAddQueue->end();
-    $userThread->join();
+    $userThread->kill('KILL')->detach();
 }
     
 sub AddUser
