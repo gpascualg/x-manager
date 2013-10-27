@@ -43,6 +43,7 @@ sub authentificate
         while (my $line = <$FH>)
         {
             my @fields = split(':', $line);
+            chop($fields[1]); # Remove \n
             # [0] = Username
             # [1] = Password (hash$password)
             if ($fields[0] eq $self->{_username})
