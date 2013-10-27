@@ -207,7 +207,7 @@ sub DelUser
         `rm $sitesEnabled/$line`;
         `rm $sitesAvailable/$line`;
     }
-    close($FH)
+    close($FH);
     
     # Unmount filesystem and delete
     `umount $WWWDir`;
