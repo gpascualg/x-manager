@@ -126,7 +126,7 @@ sub AddUser
     {    
         # We'll create a mount point!
         # Chown and chmod base dir for root only
-        $WWWDir = $config->getWWWDir($username);
+        my $WWWDir = $config->getWWWDir($username);
         mkdir $WWWDir;
         chown "root", "root", $WWWDir;
 
@@ -134,12 +134,12 @@ sub AddUser
         
         # Modify fstab
         my $FH = xIO::openLock('/etc/fstab', 'w');
-        print $FH "$virtualFile    /www/$username ext4    rw,loop,noexec,usrquota,grpquota  0 0\n";
+        print $FH "$virtualFile    $WWWDir ext4    rw,loop,noexec,usrquota,grpquota  0 0\n";
         xIO::closeLock($FH);
     
         # Create the LVM
         `touch $virtualFile`;
-        #`dd if=/dev/zero of=/root/virtual/$username.ext4 count=1024000`;
+        #`dd if=/dev/zero of=$virtualFile count=1024000`;
         `truncate -s $quota $virtualFile`;
         `/sbin/mkfs -t ext4 -q $virtualFile -F`;
         
@@ -184,23 +184,38 @@ sub DelUser
         '-r',
         "$username"
     );
-    
+        
     # Execute and ignore mail/home directories errors
     if (system(@args) & ~3072)
     {
         return 1;
     }
     
+    # Set some variables
+    my $WWWDir = $config->getWWWDir($username);
+    my $virtualFile = $config->getBaseDir() . 'virtual/' . $username . '.ext4';
+    my $sitesAvailable = $config->getSitesAvailableDir();
+    my $sitesEnabled = $config->getSitesEnabledDir();
+    
     # Readd space
-    $config->addSpace(`head -1 /www/$username/config/diskquota`);
+    $config->addSpace(`head -1 $WWWDir/config/diskquota`);
+    
+    # Delete virtual hosts
+    open(my $FH, "<$WWWDir/config/hosts");
+    while (my $line = <$FH>)
+    {
+        `rm $sitesEnabled/$line`;
+        `rm $sitesAvailable/$line`;
+    }
+    close($FH)
     
     # Unmount filesystem and delete
-    `umount /www/$username`;
-    `rm -rf /www/$username`;
-    `rm -f /root/virtual/$username.ext4`;
+    `umount $WWWDir`;
+    `rm -rf $WWWDir`;
+    `rm -f $virtualFile`;
 
     # Delete user from fstab
-    my $FH = xIO::openLock('/etc/fstab', 'r');
+    $FH = xIO::openLock('/etc/fstab', 'r');
     if ($FH != 0)
     {
         my @lines = <$FH>;

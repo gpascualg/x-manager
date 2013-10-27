@@ -97,6 +97,10 @@ sub setupSubdomain
         chown $username, $self->{_config}->getWWWGroup(), $publicHTMLPath;
         chmod 0644, $publicHTMLPath;
         
+        # At it to the hosts files
+        my $hosts = $self->{_config}->getWWWDir($username) . '/config/hosts';
+        `echo $domain >> $hosts`;
+        
         # Make a copy of the template file
         $templateSitesFile = $self->{_config}->getSitesAvailableDir() . '/template';
         $domainSitesFile = $self->{_config}->getSitesAvailableDir() . '/' . $domain;
