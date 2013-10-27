@@ -107,7 +107,7 @@ sub AddUser
     }    
     
     # Create user (enqueue it)
-    my $salt = `mkpasswd.pl`;
+    my $salt = `mkpasswd.pl --nospecial`;
     my $md5Pass = main::unix_md5_crypt($password, $salt);        
     my $group = $config->getWWWGroup();
     my $home = $config->getWWWDir($username);
