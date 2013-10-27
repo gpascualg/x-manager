@@ -11,7 +11,7 @@ sub new
         _WWWGroup           => 'www-data',
         _sitesAvailable     => '/etc/nginx/sites-available',
         _sitesEnabled       => '/etc/nginx/sites-enabled',
-        _domainName         => 'populohosting.com',
+        _domainName         => 'populohost.com',
         _freeSpace          => 0,
         _availableLoops     => 0,
         _nextLoop           => 0,
