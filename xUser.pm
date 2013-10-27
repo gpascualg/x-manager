@@ -47,8 +47,8 @@ sub authentificate
             # [1] = Password (hash$password)
             if ($fields[0] eq $self->{_username})
             {
-                my @password = split('$', $fields[1]);
-                my $md5Priv = main::unix_md5_crypt($password[3], $password[2]);
+                my @password = split('\$', $fields[1]);
+                my $md5Priv = main::unix_md5_crypt($self->{_md5Pass}, $password[2]);
                 
                 if ($md5Priv eq $fields[1])
                 {
