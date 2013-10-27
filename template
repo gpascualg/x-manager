@@ -37,7 +37,7 @@ server {
         }
 
         location ~ \.php$ {
-                fastcgi_split_path_info ^(.+\.php)(/.+)$;
+                fastcgi_split_path_info ^(.+\.php)(/.+)$;halt
                 fastcgi_pass unix:/var/run/{SERVER_NAME}.sock;
                 fastcgi_index index.php;
                 include fastcgi_params;

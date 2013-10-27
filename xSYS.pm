@@ -232,6 +232,7 @@ sub AddUser
     
     # Enqueue fstab modification
     my $virtualFile = $config->getBaseDir() . 'virtual/' . $username . '.ext4';
+    my $WWWDir = $config->getWWWDir($username);
     $fstabQueue->enqueue("0\0\0$virtualFile    $WWWDir ext4    rw,loop,noexec,usrquota,grpquota  0 0\n");
     
     # Fork because it may take a while depending on file size
@@ -239,7 +240,6 @@ sub AddUser
     {    
         # We'll create a mount point!
         # Chown and chmod base dir for root only
-        my $WWWDir = $config->getWWWDir($username);
         mkdir $WWWDir;
         chown "root", "root", $WWWDir;
             
@@ -273,6 +273,8 @@ sub AddUser
         mkdir $WWWDir . '/logs';
         chown "root", "root", $WWWDir . '/logs';
         chmod 0750, $WWWDir . '/logs';
+        
+        `touch $WWWDir/config/.ready`;
         
         exit;
     }

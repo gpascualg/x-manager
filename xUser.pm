@@ -67,7 +67,9 @@ sub setupSubdomain
 {
     my($self, $username, $htmlDir) = @_;
     
-    unless (-e $self->{_config}->getWWWDir($username))
+    my $wwwDir = $self->{_config}->getWWWDir($username);
+    
+    unless (-e $wwwDir)
     {
         return 1;
     }
@@ -75,9 +77,9 @@ sub setupSubdomain
     # We fork because the website may not be created yet, and we have to wait
     unless (fork)
     {
-        # Wait for the device to be mounted (60 seconds time out)
+        # Wait for the device to be mounted (60 seconds time out) and everything done
         Time::Out::timeout 60 => sub {
-            unless (`df | egrep ' /www/$username\$'`)
+            unless (-e $wwwDir . '/config/.ready')
             {
                 sleep 1;
             }
@@ -89,10 +91,9 @@ sub setupSubdomain
         }
         
         # Make public_html folder, chown and chmod
-        my $domain = $self->{_config}->getHTMLDefaultDomain($username, $htmlDir);    
-        my $wwwDir = $self->{_config}->getWWWDir($username);
+        my $domain = $self->{_config}->getHTMLDefaultDomain($username, $htmlDir);
         my $publicHTMLPath = $wwwDir . '/' . $domain;
-        my $logsPath = $self->{_config}->getWWWDir($username) . '/logs/access.log';
+        my $logsPath = $wwwDir . '/logs/access.log';
         my $group = $self->{_config}->getWWWGroup();
         
         mkdir $publicHTMLPath;
@@ -100,7 +101,7 @@ sub setupSubdomain
         chmod 0650, $publicHTMLPath;
         
         # At it to the hosts files
-        my $hosts = $self->{_config}->getWWWDir($username) . '/config/hosts';
+        my $hosts = $wwwDir . '/config/hosts';
         `echo $domain >> $hosts`;
         
         # Make a copy of the template file
