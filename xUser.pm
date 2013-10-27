@@ -92,7 +92,7 @@ sub setupSubdomain
         my $domain = $self->{_config}->getHTMLDefaultDomain($username, $htmlDir);    
         my $wwwDir = $self->{_config}->getWWWDir($username);
         my $publicHTMLPath = $wwwDir . '/' . $domain;
-        my $logsPath = $self->{_config}->getWWWDir($username) . '/logs';
+        my $logsPath = $self->{_config}->getWWWDir($username) . '/logs/access.log';
         
         mkdir $publicHTMLPath;
         chown $username, $self->{_config}->getWWWGroup(), $publicHTMLPath;
