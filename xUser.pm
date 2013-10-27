@@ -93,10 +93,11 @@ sub setupSubdomain
         my $wwwDir = $self->{_config}->getWWWDir($username);
         my $publicHTMLPath = $wwwDir . '/' . $domain;
         my $logsPath = $self->{_config}->getWWWDir($username) . '/logs/access.log';
+        my $group = $self->{_config}->getWWWGroup();
         
         mkdir $publicHTMLPath;
-        chown $username, $self->{_config}->getWWWGroup(), $publicHTMLPath;
-        chmod 0644, $publicHTMLPath;
+        `chown $username:$group $publicHTMLPath`;
+        chmod 0650, $publicHTMLPath;
         
         # At it to the hosts files
         my $hosts = $self->{_config}->getWWWDir($username) . '/config/hosts';
