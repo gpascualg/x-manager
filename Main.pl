@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+no warnings;
+
 use strict;
 use warnings;
 
