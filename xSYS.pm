@@ -279,7 +279,7 @@ sub AddUser
         `touch $WWWDir/config/.ready`;
         
         # Start inotifywait
-        `./htWait.sh $WWWDir &`;
+        system("./htWait.sh $WWWDir &");
         
         exit;
     }
@@ -297,10 +297,6 @@ sub DelUser
         return 1;
     }
     
-    # Stop inotify
-    $PID = `ps -ef | egrep './htWait.sh $WWWDir\$' | awk '{print \$2}'`;
-    `kill -- -\$( ps opgid= $PID | tr -d ' ' )`;
-    
     # Queue user for deleting
     $userQueue->enqueue("1\0\0$username");
     
@@ -309,6 +305,10 @@ sub DelUser
     my $virtualFile = $config->getBaseDir() . 'virtual/' . $username . '.ext4';
     my $sitesAvailable = $config->getSitesAvailableDir();
     my $sitesEnabled = $config->getSitesEnabledDir();
+    
+    # Stop inotify
+    $PID = `ps -ef | egrep './htWait.sh $WWWDir\$' | awk '{print \$2}'`;
+    `kill -- -\$( ps opgid= $PID | tr -d ' ' )`;
     
     # Readd space
     $config->addSpace(`head -1 $WWWDir/config/diskquota`);
