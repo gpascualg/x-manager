@@ -278,6 +278,9 @@ sub AddUser
         # Flag as ready
         `touch $WWWDir/config/.ready`;
         
+        # Start inotifywait
+        `./htWait.sh $WWWDir &`;
+        
         exit;
     }
     

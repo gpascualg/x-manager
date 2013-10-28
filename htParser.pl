@@ -6,23 +6,18 @@ use v5.10.1;
 
 use Data::Dumper;
 
-my $htaccessContent = '
-<Files ~ "\.tpl$">
-  Order allow,deny
-  Deny from all
-</Files>
+my $pwd = $ARGV[1];
+my @cmd = split(' ', $ARGV[0], 3);
+my $filePath = $cmd[0] . $cmd[2];
+my $relativePath = substr($cmd[0], 2);
+my @t = split('/', $relativePath, 2);
+my $domain = $t[0];
+$relativePath = substr($relativePath , length($domain));
 
-<ifModule mod_rewrite.c>
-	RewriteEngine On
+open(my $FH, $filePath);
+my @lines = <$FH>;
+close($FH);
 
-	RewriteCond %{REQUEST_FILENAME} !-f
-	RewriteCond %{REQUEST_FILENAME} !-d
-	RewriteRule ^(.*)$ ./index.php?/$1 [L]
-</ifModule>
-
-';
-
-my @lines = split("\n", $htaccessContent);
 my @conditions = ();
 my @rewrites = ();
 my @server = ();
@@ -185,8 +180,9 @@ foreach my $line (@lines)
             
             if ($isTryFiles)
             {
-                push(@conditions, "if (\$request_filename ~ \"$args[0]\")");
-                push(@rewrites, "try_files \$uri \$uri/ $args[1]");
+                #push(@conditions, "if (\$request_filename ~ \"$args[0]\")");
+                #push(@rewrites, "try_files \$uri \$uri/ $args[1]");
+                push(@rewrites, "rewrite $args[0] $args[1] last;");
             }
             else
             {
@@ -227,8 +223,43 @@ foreach my $line (@lines)
     }
 }
 
-print Dumper(\@server);
-print Dumper(\@location);
+
+my $out = '';
+while (defined (my $entry = shift(@server)))
+{
+    $out .= $entry . "\n";
+}
+
+my $relativeHeaders = "\nlocation $relativePath {\n";
+my $relative = '';
+while (defined (my $entry = shift(@location)))
+{
+    $relative .= $entry . "\n";
+}
+
+$relativePath =~ s/\///;
+
+if ($relativePath eq '')
+{
+    `rm -f $pwd/config/$domain.$relativePath.nginx`;
+    open(my $FH, ">$pwd/config/$domain.$relativePath.nginx");
+    print $FH $out;
+    close($FH);
+    
+    `rm -f $pwd/config/$domain.rootnginx`;
+    open(my $FH, ">$pwd/config/$domain.rootnginx");
+    print $FH $relative;
+    close($FH);
+}
+else
+{
+    `rm -f $pwd/config/$domain.$relativePath.nginx`;
+    open(my $FH, ">$pwd/config/$domain.$relativePath.nginx");
+    print $FH $out . $relativeHeaders . $relative . "}\n";
+    close($FH);
+}
+
+print "Set: $pwd/config/$domain.$relativePath.nginx\n";
 
 sub trim()
 {

@@ -19,10 +19,14 @@ server {
                 set $limit_rate 10k;
         }
 
+        include {SERVER_CONF}/{SERVER_NAME}.*.nginx;
+        
         location / {
                 if ($limited_quota) {
                         limit_rate_after 1;
                 }
+                
+                include {SERVER_CONF}/{SERVER_NAME}.rootnginx;
 
                 # First attempt to serve request as file, then
                 # as directory, then fall back to displaying a 404.
@@ -37,7 +41,7 @@ server {
         }
 
         location ~ \.php$ {
-                fastcgi_split_path_info ^(.+\.php)(/.+)$;halt
+                fastcgi_split_path_info ^(.+\.php)(/.+)$;
                 fastcgi_pass unix:/var/run/{SERVER_NAME}.sock;
                 fastcgi_index index.php;
                 include fastcgi_params;

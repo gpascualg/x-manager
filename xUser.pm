@@ -101,6 +101,7 @@ sub setupSubdomain
         my $domain = $self->{_config}->getHTMLDefaultDomain($username, $htmlDir);
         my $publicHTMLPath = $wwwDir . '/' . $domain;
         my $logsPath = $wwwDir . '/logs/access.log';
+        my $confPath = $wwwDir . '/config';
         my $group = $self->{_config}->getWWWGroup();
         
         mkdir $publicHTMLPath;
@@ -112,9 +113,9 @@ sub setupSubdomain
         `echo $domain >> $hosts`;
         
         # Make a copy of the template file
-        $templateSitesFile = $self->{_config}->getSitesAvailableDir() . '/template';
-        $domainSitesFile = $self->{_config}->getSitesAvailableDir() . '/' . $domain;
-        $linkSitesFile = $self->{_config}->getSitesEnabledDir() . '/' . $domain;
+        my $templateSitesFile = $self->{_config}->getSitesAvailableDir() . '/template';
+        my $domainSitesFile = $self->{_config}->getSitesAvailableDir() . '/' . $domain;
+        my $linkSitesFile = $self->{_config}->getSitesEnabledDir() . '/' . $domain;
         `cp $templateSitesFile $domainSitesFile`;
         
         # Open file and replace
@@ -127,7 +128,8 @@ sub setupSubdomain
             my %findreplace = (
                 '{SERVER_ROOT}' => $publicHTMLPath,
                 '{SERVER_NAME}' => $domain,
-                '{SERVER_LOGS}' => $logsPath
+                '{SERVER_LOGS}' => $logsPath,
+                '{SERVER_CONF}' => $confPath
             );
             my @newlines = xSYS::FindAndReplace(\@lines, \%findreplace);
             
