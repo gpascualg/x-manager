@@ -233,7 +233,7 @@ sub AddUser
     # Enqueue fstab modification
     my $virtualFile = $config->getBaseDir() . 'virtual/' . $username . '.ext4';
     my $WWWDir = $config->getWWWDir($username);
-    $fstabQueue->enqueue("0\0\0$virtualFile    $WWWDir ext4    rw,loop,noexec,usrquota,grpquota  0 0\n");
+    $fstabQueue->enqueue("0\0\0$virtualFile    $WWWDir ext4    rw,loop,noexec,usrquota,grpquota,nosuid,nodev  0 0\n");
     
     # Fork because it may take a while depending on file size
     unless (fork)
@@ -258,7 +258,7 @@ sub AddUser
         }
         
         # Mount using the whole command, as fstab modification may not be ready yet
-        `mount -o loop,rw,usrquota,grpquota,noexec $virtualFile $WWWDir`;
+        `mount -o loop,rw,usrquota,grpquota,noexec,nosuid,nodev $virtualFile $WWWDir`;
         
         # Chown and chmod config dir for root only
         mkdir $WWWDir . '/config';
