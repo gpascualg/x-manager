@@ -447,7 +447,7 @@ sub DoKill
     
     foreach my $cpid (`ps -o pid= --ppid $pid`)
     {
-        DoKill($cpid);
+        xSYS::DoKill($cpid);
     }
     
     `kill -9 $pid > /dev/null 2>&1`
