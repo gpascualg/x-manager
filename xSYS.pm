@@ -307,8 +307,7 @@ sub DelUser
     my $sitesEnabled = $config->getSitesEnabledDir();
     
     # Stop inotify
-    my $PID = `ps -ef | egrep './htWait.sh $WWWDir\$' | awk '{print \$2}' | head -1`;
-    xSYS::DoKill($PID);
+    xSYS::DoKill(`ps -ef | egrep './htWait.sh $WWWDir\$' | awk '{print \$2}' | head -1`);
     
     # Readd space
     $config->addSpace(`head -1 $WWWDir/config/diskquota`);
