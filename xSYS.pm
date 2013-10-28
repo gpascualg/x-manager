@@ -297,6 +297,10 @@ sub DelUser
         return 1;
     }
     
+    # Stop inotify
+    $PID = `ps -ef | egrep './htWait.sh $WWWDir$' | awk '{print \$1}'`;
+    `kill -- -$( ps opgid= $PID | tr -d ' ' )`;
+    
     # Queue user for deleting
     $userQueue->enqueue("1\0\0$username");
     
