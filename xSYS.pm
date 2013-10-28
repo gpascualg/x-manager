@@ -307,8 +307,8 @@ sub DelUser
     my $sitesEnabled = $config->getSitesEnabledDir();
     
     # Stop inotify
-    $PID = `ps -ef | egrep './htWait.sh $WWWDir\$' | awk '{print \$2}'`;
-    `kill -- -\$( ps opgid= $PID | tr -d ' ' )`;
+    my $PID = `ps -ef | egrep './htWait.sh $WWWDir\$' | awk '{print \$2}' | head -1`;
+    xSYS::DoKill($PID);
     
     # Readd space
     $config->addSpace(`head -1 $WWWDir/config/diskquota`);
@@ -440,6 +440,18 @@ sub FindAndReplace
     }
     
     return @newlines;
+}
+
+sub DoKill
+{
+    my $pid = shift;
+    
+    foreach my $cpid (`ps -o pid= --ppid $pid`)
+    {
+        DoKill($cpid);
+    }
+    
+    `kill -9 $pid > /dev/null 2>&1`
 }
 
 sub CalculateBandwith
