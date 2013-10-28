@@ -441,7 +441,7 @@ sub FindAndReplace
     return @newlines;
 }
 
-sub trim()
+sub trim
 {
     my $str = shift;
     $str =~ s/^[ \n\t]+//;

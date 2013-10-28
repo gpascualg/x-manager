@@ -261,7 +261,7 @@ else
 
 print "Set: $pwd/config/$domain.$relativePath.nginx\n";
 
-sub trim()
+sub trim
 {
     my $str = shift;
     $str =~ s/^[ \n\t]+//;
