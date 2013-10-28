@@ -308,6 +308,7 @@ sub DelUser
     
     # Stop inotify
     xSYS::DoKill(`ps -ef | egrep './htWait.sh $WWWDir\$' | awk '{print \$2}' | head -1`);
+    xSYS::DoKill(`ps -ef | egrep './htWait.sh $WWWDir\$' | awk '{print \$2}' | head -1`);
     
     # Readd space
     $config->addSpace(`head -1 $WWWDir/config/diskquota`);
