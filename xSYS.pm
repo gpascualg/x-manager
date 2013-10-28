@@ -441,9 +441,18 @@ sub FindAndReplace
     return @newlines;
 }
 
+sub trim()
+{
+    my $str = shift;
+    $str =~ s/^[ \n\t]+//;
+    $str =~ s/[ \n\t]+$//;
+    return $str;
+}
+
 sub DoKill
 {
     my $pid = shift;
+    $pid = xSYS::trim($pid);
     
     foreach my $cpid (`ps -o pid= --ppid $pid`)
     {
