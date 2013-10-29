@@ -64,6 +64,13 @@ our $errmsg = 0;
         'SYS_UserAdd' => sub {
             my($client, %args) = @_;
             
+            if (!exists $args{'Username'} or !exists $args{'Username'}  or !exists $args{'Plan'})
+            {
+                $::errno = 1;
+                $::errmsg = 'Incorrect arguments';
+                return '-6';
+            }
+            
             my $username = $args{'Username'};
             my $password = $args{'Password'};
             my $plan = $args{'Plan'};
@@ -76,6 +83,13 @@ our $errmsg = 0;
             
             my $username = $args{'Username'};
             
+            if (!exists $args{'Username'})
+            {
+                $::errno = 1;
+                $::errmsg = 'Incorrect arguments';
+                return '-6';
+            }
+            
             return xSYS::DelUser($config, $username);
         },
         
@@ -85,6 +99,13 @@ our $errmsg = 0;
             my $username = $args{'Username'};
             my $domain = $args{'Domain'};
             
+            if (!exists $args{'Username'} or ! exists $args{'Domain'})
+            {
+                $::errno = 1;
+                $::errmsg = 'Incorrect arguments';
+                return '-6';
+            }
+            
             return $client->setupSubdomain($username, $domain);
         },
 
@@ -93,6 +114,13 @@ our $errmsg = 0;
             
             my $username = $args{'Username'};
             
+            if (!exists $args{'Username'})
+            {
+                $::errno = 1;
+                $::errmsg = 'Incorrect arguments';
+                return '-6';
+            }
+            
             return xSYS::CheckBandwidth($config, $username);
         },
 
@@ -100,6 +128,13 @@ our $errmsg = 0;
             my($client, %args) = @_;
             
             my $username = $args{'Username'};
+            
+            if (!exists $args{'Username'})
+            {
+                $::errno = 1;
+                $::errmsg = 'Incorrect arguments';
+                return '-6';
+            }
             
             return xSYS::RestoreBandwidth($config, $username);
         }
