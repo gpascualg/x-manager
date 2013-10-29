@@ -38,10 +38,8 @@ sub do_stop
     }
     else
     {
-        $socket->send("Identify::::");
-        $socket->read(my $data, 4);
-        $socket->send("SYS_DAEMON_STOP::");
-        $socket->read($data, 4);
+        $socket->send('{"Auth":{"Username":"","Password":""},"Call":{"Function":"SYS_DAEMON_STOP"}}');
+        $socket->read($data, 4); # No need to read the JSON answer, we simply return now
         $socket->close;
         
         print("Daemon stopped\n");
