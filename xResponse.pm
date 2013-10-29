@@ -16,6 +16,8 @@ sub new
     return $self;
 }
 
+sub TO_JSON { return { %{ shift() } }; }
+
 sub set
 {
     my($self, $errors, $errorcode, $message) = @_;
@@ -30,6 +32,9 @@ sub send
 {
     my($self, $socket) = @_;
     
+    my $JSON = JSON::JSON->new->utf8;
+    $JSON->convert_blessed(1);
+
     my $json = encode_json($self);
     my $len = pack("I", length(Encode::encode_utf8($json)));
     
