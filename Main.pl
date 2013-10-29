@@ -6,6 +6,7 @@ use strict;
 use warnings;
 
 #use Carp;
+use JSON;
 use Time::HiRes qw(usleep);
 use Carp::Assert;
 use IO::Socket::INET;
@@ -22,43 +23,29 @@ use xSYS;
 $| = 1;
 
 {
-    my %clients = ();
     my $config = new xConfig();
     my $stop = 0;
     my $sysadmin = 0;
 
     my %callbacks = (
-        'Identify' => sub {
-            my($socket, $username, $privKey) = @_;
-
-            $clients{$socket} = new xUser($config, $username, $privKey, $sysadmin);
-            my $result = $clients{$socket}->authentificate();
-            if ($result != 0)
-            {
-                $clients{$socket} = undef; # Avoid further processing
-            }
-
-            return $result;
-        },
-
         'Banwidth' => sub {
-            my($socket) = @_;
-            return $clients{$socket}->getBandwith();
+            my($client, %args) = @_;
+            return $client->getBandwith();
         },
 
         'UsedBandwith' => sub {
-            my($socket) = @_;
-            return $clients{$socket}->getUsedBandwith();
+            my($client, %args) = @_;
+            return $client->getUsedBandwith();
         },
 
         'Quota' => sub {
-            my($socket) = @_;
-            return $clients{$socket}->getQuota();
+            my($client, %args) = @_;
+            return $client->getQuota();
         },
 
         'UsedQuota' => sub {
-            my($socket) = @_;
-            return $clients{$socket}->getUsedQuota();
+            my($client, %args) = @_;
+            return $client->getUsedQuota();
         },
 
         'SYS_DAEMON_STOP' => sub
@@ -72,27 +59,45 @@ $| = 1;
         },
 
         'SYS_UserAdd' => sub {
-            my($socket, $username, $password, $plan) = @_;
+            my($client, %args) = @_;
+            
+            my $username = $args{'Username'};
+            my $password = $args{'Password'};
+            my $plan = $args{'Plan'};
+            
             return xSYS::AddUser($config, $username, $password, $plan);
         },
         
         'SYS_UserDel' => sub {
-            my($socket, $username) = @_;
+            my($client, %args) = @_;
+            
+            my $username = $args{'Username'};
+            
             return xSYS::DelUser($config, $username);
         },
         
         'SYS_DomainAdd' => sub {
-            my($socket, $username, $domain) = @_;
-            return $clients{$socket}->setupSubdomain($username, $domain);
+            my($client, %args) = @_;
+            
+            my $username = $args{'Username'};
+            my $domain = $args{'Domain'};
+            
+            return $client->setupSubdomain($username, $domain);
         },
 
-        'SYS_CheckBandwith' => sub {
-            my($socket, $username) = @_;
+        'SYS_CheckBandwith' => sub {            
+            my($client, %args) = @_;
+            
+            my $username = $args{'Username'};
+            
             return xSYS::CheckBandwidth($config, $username);
         },
 
         'SYS_RestoreBandwidth' => sub {
-            my($socket, $username) = @_;
+            my($client, %args) = @_;
+            
+            my $username = $args{'Username'};
+            
             return xSYS::RestoreBandwidth($config, $username);
         }
     );
@@ -174,8 +179,6 @@ $| = 1;
             {
                 my $new = $socket->accept();
                 $select->add($new);
-                $clients{$new} = undef;
-                assert($select->count - 1 == keys(%clients));
             }
             else
             {
@@ -187,9 +190,7 @@ $| = 1;
                 }
                 else
                 {
-                    delete $clients{$rc};
                     closeSocket($select, $rc);
-                    assert($select->count - 1 == keys(%clients));
                 }
             }
         }
@@ -209,31 +210,44 @@ $| = 1;
     {
         my($data, $socket) = @_;
 
-        my @parameters = split(/::/, $data);
-        my $ret = -1;
-        if (defined($callbacks{$parameters[0]}))
+        my $packet = json_decode($data);
+        
+        unless (exists $packet->{'Auth'})
         {
-            my $f = $parameters[0];
-            # Has not already identified?
-            if ($f ne "Identify" and not defined $clients{$socket})
-            {
-                print "Trying to call $f whithout being identified\n";
-                $ret = -2;
-            }
-            # Is it a SYS function?
-            elsif($f =~ m/^SYS_/ and not $sysadmin)
-            {
-                print "Trying to call $f while not being sysadmin\n";
-                $ret = -1;
-            }
-            else
-            {
-                my @arguments = splice @parameters, 1;
-                $ret = $callbacks{$f}->($socket, @arguments);
-            }
+            my $response = new xResponse('1', '-1', 'Invalid packet header, no Auth');
+            return $response->send($socket);
         }
-
-        $socket->send(pack("I", $ret));
+        
+        my $client = new xUser($config, $packet->{'Auth'}{'Username'}, $packet->{'Auth'}{'PrivateKey'}, $sysadmin);
+        my $result = $client->authentificate();
+        if ($result != 0)
+        {
+            my $response = new xResponse('1', '-2', 'Could not authentificate');
+            return $response->send($socket);
+        }
+        
+        unless (exists $packet->{'Call'})
+        {
+            my $response = new xResponse('1', '-3', 'Invalid packet body, no Call');
+            return $response->send($socket);
+        }
+        
+        my $function = $packet->{'Call'}{'Function'};
+        unless (defined($callbacks{$function}))
+        {
+            my $response = new xResponse('1', '-4', 'Function not found');
+            return $response->send($socket);
+        }
+        
+        if($function =~ m/^SYS_/ and not $sysadmin)
+        {
+            my $response = new xResponse('1', '-4', 'Function not found');
+            return $response->send($socket);
+        }
+        
+        $result = $callbacks{$function}->($client, $packet->{'Call'}{'Arguments'});
+        my $response = new xResponse($result != 0, $result, '');
+        return $response->send($socket);
     }
 }
 

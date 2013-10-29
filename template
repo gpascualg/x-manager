@@ -26,7 +26,7 @@ server {
                         limit_rate_after 1;
                 }
                 
-                include {SERVER_CONF}/{SERVER_NAME}.rootnginx;
+                include {SERVER_CONF}/{SERVER_NAME}.rootnginx*;
 
                 # First attempt to serve request as file, then
                 # as directory, then fall back to displaying a 404.
