@@ -27,8 +27,8 @@ our $errmsg = 0;
 
 {
     my $config = new xConfig();
-    my $stop = 0;
-    my $sysadmin = 0;
+    my $daemonStop = 0;
+    my $isSYSAdmin = 0;
 
     my %callbacks = (
         'Banwidth' => sub {
@@ -53,7 +53,7 @@ our $errmsg = 0;
 
         'SYS_DAEMON_STOP' => sub
         {
-            $stop = 1;
+            $daemonStop = 1;
             return 0;
         },
         
@@ -64,7 +64,7 @@ our $errmsg = 0;
         'SYS_UserAdd' => sub {
             my($client, %args) = @_;
             
-            if (!exists $args{'Username'} or !exists $args{'Username'}  or !exists $args{'Plan'})
+            if (!exists $args{'Username'} or !exists $args{'Password'}  or !exists $args{'Plan'})
             {
                 $::errno = 1;
                 $::errmsg = 'Incorrect arguments';
@@ -203,12 +203,12 @@ our $errmsg = 0;
     {
         xSYS::initialize($config);
         sockconnect();
-        $sysadmin = 1;
+        $isSYSAdmin = 1;
     }
 
     my $select = IO::Select->new($socket) or die "IO::Select $!";
 
-    while (!$stop)
+    while (!$daemonStop)
     {
         my @ready_clients = $select->can_read(0);
         foreach my $rc (@ready_clients)
@@ -267,7 +267,7 @@ our $errmsg = 0;
             return $response->send($socket);
         }
         
-        my $client = new xUser($config, $packet->{'Auth'}{'Username'}, $packet->{'Auth'}{'PrivateKey'}, $sysadmin);
+        my $client = new xUser($config, $packet->{'Auth'}{'Username'}, $packet->{'Auth'}{'PrivateKey'}, $isSYSAdmin);
         my $result = $client->authentificate();
         if ($result != 0)
         {
@@ -288,7 +288,7 @@ our $errmsg = 0;
             return $response->send($socket);
         }
         
-        if($function =~ m/^SYS_/ and not $sysadmin)
+        if($function =~ m/^SYS_/ and not $isSYSAdmin)
         {
             my $response = new xResponse('1', '-5', 'Function not found');
             return $response->send($socket);
