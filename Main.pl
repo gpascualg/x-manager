@@ -262,7 +262,13 @@ our $errmsg = 0;
         $::errno = 0;
         $::errmsg = '';
         
-        $result = $callbacks{$function}->($client, $packet->{'Call'}{'Arguments'});
+        my %args = ();
+        if (exists $packet->{'Call'}{'Arguments'})
+        {
+            %args = $packet->{'Call'}{'Arguments'};
+        }
+        
+        $result = $callbacks{$function}->($client, $args);
         my $response = new xResponse($::errno != 0, $result, $::errmsg);
         return $response->send($socket);
     }
