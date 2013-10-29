@@ -265,7 +265,7 @@ our $errmsg = 0;
         my %args = ();
         if (exists $packet->{'Call'}{'Arguments'})
         {
-            %args = $packet->{'Call'}{'Arguments'};
+            %args = %{+$packet->{'Call'}{'Arguments'}};
         }
         
         $result = $callbacks{$function}->($client, %args);
