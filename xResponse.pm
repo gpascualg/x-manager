@@ -30,7 +30,7 @@ sub send
 {
     my($self, $socket) = @_;
     
-    my $json = json_encode($self);
+    my $json = encode_json($self);
     my $len = pack("I", length(Encode::encode_utf8($json)));
     
     return $socket->send($len . $json) > 0;    

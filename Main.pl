@@ -210,11 +210,22 @@ $| = 1;
     {
         my($data, $socket) = @_;
 
-        my $packet = json_decode($data);
+        
+        my $packet = undef;
+        
+        eval
+        {
+            $packet = decode_json($data);
+        }
+        or do
+        {
+            my $response = new xResponse('1', '-1', 'Incorrect JSON format');
+            return $response->send($socket);
+        };
         
         unless (exists $packet->{'Auth'})
         {
-            my $response = new xResponse('1', '-1', 'Invalid packet header, no Auth');
+            my $response = new xResponse('1', '-2', 'Invalid packet header, no Auth');
             return $response->send($socket);
         }
         
@@ -222,26 +233,26 @@ $| = 1;
         my $result = $client->authentificate();
         if ($result != 0)
         {
-            my $response = new xResponse('1', '-2', 'Could not authentificate');
+            my $response = new xResponse('1', '-3', 'Could not authentificate');
             return $response->send($socket);
         }
         
         unless (exists $packet->{'Call'})
         {
-            my $response = new xResponse('1', '-3', 'Invalid packet body, no Call');
+            my $response = new xResponse('1', '-4', 'Invalid packet body, no Call');
             return $response->send($socket);
         }
         
         my $function = $packet->{'Call'}{'Function'};
         unless (defined($callbacks{$function}))
         {
-            my $response = new xResponse('1', '-4', 'Function not found');
+            my $response = new xResponse('1', '-5', 'Function not found');
             return $response->send($socket);
         }
         
         if($function =~ m/^SYS_/ and not $sysadmin)
         {
-            my $response = new xResponse('1', '-4', 'Function not found');
+            my $response = new xResponse('1', '-5', 'Function not found');
             return $response->send($socket);
         }
         
