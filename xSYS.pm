@@ -15,7 +15,7 @@ package xSYS;
 );
 
 # In B
-%planToBandwith = (
+%planToBandwidth = (
     0 => 2147483648,
     1 => 5368709120,
     2 => 21474836480
@@ -200,7 +200,7 @@ sub AddUser
     # Setup configurations
     my $quota = $planToQuota{$plan};
     my $quotaMB = $quota / 1024;
-    my $bandwith = $planToBandwith{$plan};
+    my $bandwidth = $planToBandwidth{$plan};
     
     # Check that we have 1/2 more than the required space, just in case
     if ($config->getFreeSpace() < $quotaMB + ($quotaMB / 2))
@@ -271,7 +271,7 @@ sub AddUser
         
         # Create config files
         `echo "$quota" > $WWWDir/config/diskquota`;
-        `echo "$bandwith" > $WWWDir/config/bandwith`;
+        `echo "$bandwidth" > $WWWDir/config/bandwidth`;
         
         # Chown and chmod logs dir for root only
         mkdir $WWWDir . '/logs';
@@ -344,7 +344,7 @@ sub CheckBandwidth
 {
     my($config, $username) = @_;
     
-    my $sent = xSYS::CalculateBandwith($config, $username);
+    my $sent = xSYS::CalculateBandwidth($config, $username);
     my $quota = xSYS::GetBandwidth($config, $username);
 
     if ($sent >= $quota)
@@ -469,7 +469,7 @@ sub DoKill
     `kill -9 $pid > /dev/null 2>&1`
 }
 
-sub CalculateBandwith
+sub CalculateBandwidth
 {
     my($config, $username) = @_;
     
@@ -496,10 +496,10 @@ sub CalculateBandwith
     return $total;
 }
 
-sub GetBandwith
+sub GetBandwidth
 {
     my($config, $username) = @_;
-    my $f = $config->getWWWDir($username) . '/config/bandwith';
+    my $f = $config->getWWWDir($username) . '/config/bandwidth';
     
     return int(`head -1 $f`);
 }

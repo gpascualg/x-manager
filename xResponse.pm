@@ -8,7 +8,7 @@ sub new
     my $class = shift;
     my $self = {
         HasErrors   => shift,
-        ErrorCode   => shift,
+        Return      => shift,
         Message     => shift,
     };
     
@@ -20,10 +20,10 @@ sub TO_JSON { return { %{ shift() } }; }
 
 sub set
 {
-    my($self, $errors, $errorcode, $message) = @_;
+    my($self, $errors, $return, $message) = @_;
     
     $self->{HasErrors} = $errors;
-    $self->{ErrorCode} = $errorcode;
+    $self->{Return} = $return;
     $self->{Message} = $message;
 }
 

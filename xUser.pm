@@ -158,16 +158,16 @@ sub setupSubdomain
     return 0;
 }
 
-sub getBandwith
+sub GetBandwidth
 {
     my($self) = @_;
-    return xSYS::GetBandwith($self->{_config}, $self->{_username});
+    return xSYS::GetBandwidth($self->{_config}, $self->{_username});
 }
 
-sub getUsedBandwith
+sub getUsedBandwidth
 {
     my($self) = @_;
-    return xSYS::CalculateBandwith($self->{_config}, $self->{_username});
+    return xSYS::CalculateBandwidth($self->{_config}, $self->{_username});
 }
 
 sub getQuota
