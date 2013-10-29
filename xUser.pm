@@ -34,6 +34,8 @@ sub authentificate
     # Check for weird characters
     if (sanitize($self->{_username}, 'a-zA-Z0-9-_') != 1)
     {
+        $::errno = 1;
+        $::errmsg = 'Username contains invalid characters';
         return 1;
     }
     
@@ -60,6 +62,8 @@ sub authentificate
         }
     }
     
+    $::errno = 1;
+    $::errmsg = 'Invalid username/password';
     return 2;
 }
 
@@ -71,6 +75,8 @@ sub setupSubdomain
     
     unless (-e $wwwDir)
     {
+        $::errno = 1;
+        $::errmsg = 'Username is not found';
         return 1;
     }
     

@@ -205,12 +205,16 @@ sub AddUser
     # Check that we have 1/2 more than the required space, just in case
     if ($config->getFreeSpace() < $quotaMB + ($quotaMB / 2))
     {
+        $::errno = 1;
+        $::errmsg = 'There is not enough free space';
         return 1;
     }
     
     # If the user exists, return
     if (getpwnam($username))
     {
+        $::errno = 1;
+        $::errmsg = 'Username already exists';
         return 2;
     }    
     
@@ -294,6 +298,8 @@ sub DelUser
     # Does the user exist? If not, return error
     unless (getpwnam($username))
     {
+        $::errno = 1;
+        $::errmsg = 'Username does not exist';
         return 1;
     }
     
@@ -495,7 +501,7 @@ sub GetBandwith
     my($config, $username) = @_;
     my $f = $config->getWWWDir($username) . '/config/bandwith';
     
-    return `head -1 $f`;
+    return int(`head -1 $f`);
 }
 
 sub GetQuota
@@ -503,7 +509,7 @@ sub GetQuota
     my($config, $username) = @_;
     my $f = $config->getWWWDir($username) . '/config/diskquota';
     
-    return `head -1 $f`;
+    return int(`head -1 $f`);
 }
 
 sub CalculateQuota

@@ -22,6 +22,8 @@ use xResponse;
 #$SIG{ __DIE__ } = sub { Carp::confess( @_ ) };
 
 $| = 1;
+our $errno = 0;
+our $errmsg = 0;
 
 {
     my $config = new xConfig();
@@ -257,8 +259,11 @@ $| = 1;
             return $response->send($socket);
         }
         
+        $::errno = 0;
+        $::errmsg = '';
+        
         $result = $callbacks{$function}->($client, $packet->{'Call'}{'Arguments'});
-        my $response = new xResponse($result != 0, $result, '');
+        my $response = new xResponse($::errno != 0, $result, $::errmsg);
         return $response->send($socket);
     }
 }
