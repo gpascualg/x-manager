@@ -21,6 +21,7 @@ close($FH);
 my @conditions = ();
 my @rewrites = ();
 my @server = ();
+my @temporal = ();
 my @location = ();
 my $doRewrites = 0;
 my $isTryFiles = 0;
@@ -54,28 +55,63 @@ foreach my $line (@lines)
             
             if ($deny ne '')
             {
-                push(@server, "deny$deny;");
+                if (@conditions == 0)
+                {
+                    push(@server, "deny$deny;");
+                }
+                else
+                {
+                    push(@temporal, "deny$deny;");
+                }
             }
         }
         
         when ("DirectoryIndex")
         {
-            push(@server, "index " . $params[1] . ";");
+            if (@conditions == 0)
+            {
+                push(@server, "index " . $params[1] . ";");
+            }
+            else
+            {
+                push(@temporal, "index " . $params[1] . ";");
+            }
         }
         
         when ("AddDefaultCharset")
         {
-            push(@server, "charset " . lc($params[1]) . ";");
+            if (@conditions == 0)
+            {
+                push(@server, "charset " . lc($params[1]) . ";");
+            }
+            else
+            {
+                push(@temporal, "charset " . lc($params[1]) . ";");
+            }
         }
         
         when ("ServerSignature")
         {
-            push(@server, "autoindex " . lc($params[1]) . ";");
+            if (@conditions == 0)
+            {
+                push(@server, "autoindex " . lc($params[1]) . ";");
+            }
+            else
+            {
+                push(@temporal, "autoindex " . lc($params[1]) . ";");
+            }
         }
         
         when ("ErrorDocument")
         {
-            push(@server, "error_page " . $params[1] . ";");
+            if (@conditions == 0)
+            {
+                push(@server, "error_page " . $params[1] . ";");
+            }
+            else
+            {
+                push(@temporal, "error_page " . $params[1] . ";");
+            }
         }
         
         when ("RewriteEngine")
@@ -84,6 +120,32 @@ foreach my $line (@lines)
             {
                 $doRewrites = 1;
             }
+        }
+        
+        when ("<Files")
+        {
+            my @matches = ($params[1] =~ /(.+?)>/ );
+            if (@matches == 0)
+            {
+                continue;
+            } 
+            
+            push(@conditions, "location " . $matches[0]);
+        }
+        
+        when ("</Files>")
+        {
+            my $string = $conditions[0] . " {\n";
+            
+            while (defined (my $temp = shift(@temporal)))
+            {
+                $string .= $temp . "\n";
+            }
+            
+            $string .= "}\n";
+            undef(@conditions);
+            
+            push(@server, $string);
         }
         
         when ("RewriteCond")
