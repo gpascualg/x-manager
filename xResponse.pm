@@ -35,3 +35,7 @@ sub send
     
     return $socket->send($len . $json) > 0;    
 }
+
+1;
+
+__END__
