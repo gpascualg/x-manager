@@ -114,7 +114,7 @@ sub DoParse
     my @rewrites = ();
     my @temporal = ();
     my $isTryFiles = 0;
-    my $currentVariable = 1;
+    my $currentVariable = 0;
     
     unless (defined($locations{$relativePath}))
     {
@@ -355,6 +355,7 @@ sub DoParse
                 
                 if ($last)
                 {
+                    ++$currentVariable;
                     $isTryFiles = 0;
                     my $currentValue = 'A';
                     my $currentChain = '';
