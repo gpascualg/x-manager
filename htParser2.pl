@@ -364,7 +364,7 @@ sub DoParse
                     while (defined (my $condition = shift(@conditions)))
                     {
                         $currentChain .= $currentValue;
-                        $string .= $condition . "{\nset \$test$currentVariable = \"{\$test$currentVariable}$currentValue\";\n}\n";
+                        $string .= $condition . "{\nset \$test$currentVariable \"{\$test$currentVariable}$currentValue\";\n}\n";
                         $currentValue = chr(ord($currentValue) + 1);
                     }
                     
