@@ -368,12 +368,20 @@ sub DoParse
                         $currentValue = chr(ord($currentValue) + 1);
                     }
                     
-                    $string .= "if (\$test$currentVariable = $currentChain) {\n";
+                    if ($currentChain ne '')
+                    {
+                        $string .= "if (\$test$currentVariable = $currentChain) {\n";
+                    }
+                    
                     while (defined (my $rewrite = shift(@rewrites)))
                     {
                         $string .= $rewrite . "\n";
                     }
-                    $string .= "}\n";
+                    
+                    if ($currentChain ne '')
+                    {
+                        $string .= "}\n";
+                    }
                                         
                     unless (defined($locations{$loc}))
                     {
