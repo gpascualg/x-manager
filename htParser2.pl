@@ -23,7 +23,8 @@ sub Main
     SearchInDir("$pwd/$domain", $relativePath);
     
     my $fi = 0;
-    while ((my $key, my $value) = each(%locations)){
+    while ((my $key, my $value) = each(%locations))
+    {
         my $string = $value->pop();
         
         if ($key eq '/')
@@ -44,6 +45,23 @@ sub Main
             ++$fi;
         }
     }
+    
+    # Test for errors on configuration
+    my $out = `nginx -t 2>&1`;
+    my @lines = split("\n", $out);
+
+    for my $line (@lines)
+    {
+        my @matches = ($line =~ /nginx: \[emerg\] (.+?) in \/www\/(.+?):/);
+        if (@matches == 2)
+        {
+            my $path = "/www/" . $matches[1];
+            `rm $path`;
+        }
+    }
+
+    # Reload configuration
+    `/etc/init.d/nginx reload &> /dev/null`;
 }
 
 sub SearchInDir
