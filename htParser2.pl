@@ -84,7 +84,7 @@ sub Main
         {
             my $path = "/www/" . $matches[1];
             `rm $path`;
-            print "[FAIL] Could't not compile HTACCESS $key on /www/$matches[1]\n";
+            print "[FAIL] Could not compile HTACCESS $key on /www/$matches[1]\n";
         }
     }
 
@@ -102,8 +102,10 @@ sub SearchInDir
     }
         
     my @files = <$path/*>;
-    foreach my $file (@files) {
-        if ($file) {
+    foreach my $file (@files)
+    {
+        if (-d $file) 
+        {
             my @temp = split('/', $file);
             
             SearchInDir($file, $relativePath . pop(@temp) . "/");
@@ -251,7 +253,7 @@ sub DoParse
                     continue;
                 }    
                 
-                my $variable = '$' . lc($matches[0]);
+                my $variable = '$' . $reinterpreter{$matches[0]};
                 my $cond = substr($params[1], 3 + length($variable));
                 $cond = trim($cond);
                 my $negative = '';
