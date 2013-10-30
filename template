@@ -8,7 +8,7 @@ server {
         server_name {SERVER_NAME};
 
         error_log /dev/null crit;
-        access_log {SERVER_LOGS} bandwith;
+        access_log {SERVER_LOGS} bandwidth;
 
         # Apply speed limits
         set $limit_rate 300k;
@@ -33,11 +33,6 @@ server {
                 try_files $uri $uri/ 404;
                 # Uncomment to enable naxsi on this location
                 # include /etc/nginx/naxsi.rules;
-        }
-        
-        # Naxsi handling
-        location /RequestDenied {
-            return 400;
         }
 
         location ~ \.php$ {
