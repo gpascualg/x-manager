@@ -9,6 +9,30 @@ use htLocation;
 
 my %locations = ();
 
+my %reinterpreter = (
+    'HTTP_USER_AGENT' => 'http_user_agent',
+    'HTTP_REFERER' => 'http_referer',
+    'HTTP_COOKIE' => 'http_cookie',
+    'HTTP_FORWARDED' => 'http_forwarded',
+    'HTTP_HOST' => 'http_host',
+    'HTTP_PROXY_CONNECTION' => 'http_proxy_connection',
+    'HTTP_ACCEPT' => 'http_accept',
+    'REMOTE_ADDR' => 'remote_addr',
+    'REMOTE_PORT' => 'remote_port',
+    'REMOTE_USER' => 'remote_user',
+    'REQUEST_METHOD' => 'request_method',
+    'SCRIPT_FILENAME' => 'uri',
+    'PATH_INFO' => 'uri',
+    'QUERY_STRING' => 'args',
+    'DOCUMENT_ROOT' => 'document_root',
+    'SERVER_NAME' => 'server_name',
+    'SERVER_ADDR' => 'server_addr',
+    'SERVER_PORT' => 'server_port',
+    'SERVER_PROTOCOL' => 'server_protocol',
+    'REQUEST_URI' => 'uri',
+    'REQUEST_FILENAME' => 'request_filename'
+);
+
 sub Main
 {
     my $pwd = $ARGV[1];
@@ -72,9 +96,7 @@ sub SearchInDir
     {
         DoParse($path . "/.htaccess", $relativePath);
     }
-    
-    print "IN: $path - $relativePath\n";
-    
+        
     my @files = <$path/*>;
     foreach my $file (@files) {
         if ($file) {
@@ -92,6 +114,7 @@ sub DoParse
     my @rewrites = ();
     my @temporal = ();
     my $isTryFiles = 0;
+    my $currentVariable = 1;
     
     unless (defined($locations{$relativePath}))
     {
@@ -333,28 +356,25 @@ sub DoParse
                 if ($last)
                 {
                     $isTryFiles = 0;
+                    $currentValue = 'A';
+                    $currentChain = '';
                     
                     my $i = 0;
                     my $string = '';
                     while (defined (my $condition = shift(@conditions)))
                     {
-                        $string .= $condition . "{\n";
-                        ++$i;
+                        $currentChain .= $currentValue;
+                        $string .= $condition . "{\nset \$test$currentVariable = \"{\$test$currentVariable}$currentValue\";}\n";
+                        $currentValue = chr(ord($currentValue) + 1);
                     }
                     
+                    $string .= 'if (\$test$currentVariable = $currentChain) {\n';
                     while (defined (my $rewrite = shift(@rewrites)))
                     {
                         $string .= $rewrite . "\n";
                     }
-                
-                    while ($i > 0)
-                    {
-                        $string .= "}\n";
-                        --$i;
-                    }
-                    
-                    print $string;
-                    
+                    $string .= '}\n';
+                                        
                     unless (defined($locations{$loc}))
                     {
                         $locations{$loc} = new htLocation();
