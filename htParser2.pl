@@ -356,24 +356,24 @@ sub DoParse
                 if ($last)
                 {
                     $isTryFiles = 0;
-                    $currentValue = 'A';
-                    $currentChain = '';
+                    my $currentValue = 'A';
+                    my $currentChain = '';
                     
                     my $i = 0;
                     my $string = '';
                     while (defined (my $condition = shift(@conditions)))
                     {
                         $currentChain .= $currentValue;
-                        $string .= $condition . "{\nset \$test$currentVariable = \"{\$test$currentVariable}$currentValue\";}\n";
+                        $string .= $condition . "{\nset \$test$currentVariable = \"{\$test$currentVariable}$currentValue\";\n}\n";
                         $currentValue = chr(ord($currentValue) + 1);
                     }
                     
-                    $string .= 'if (\$test$currentVariable = $currentChain) {\n';
+                    $string .= "if (\$test$currentVariable = $currentChain) {\n";
                     while (defined (my $rewrite = shift(@rewrites)))
                     {
                         $string .= $rewrite . "\n";
                     }
-                    $string .= '}\n';
+                    $string .= "}\n";
                                         
                     unless (defined($locations{$loc}))
                     {
