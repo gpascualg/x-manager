@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 
 package htLocation;
 sub new

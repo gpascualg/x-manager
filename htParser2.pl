@@ -17,7 +17,7 @@ sub Main
     my $filePath = $cmd[0] . $cmd[2];
     my @temp = split('/', $cmd[0], 3); # Divide in . / DOMAIN / PATH
     my $domain = $temp[1];    
-    my $relativePath = "/" . $temp[2];
+    my $relativePath = "/";
 
     # We want to emulate an Apache like system, so we will have to keep going from / directory, to top most one
     SearchInDir("$pwd/$domain", $relativePath);
@@ -26,7 +26,7 @@ sub Main
     while ((my $key, my $value) = each(%locations)){
         my $string = $value->pop();
         
-        if ($key eq '')
+        if ($key eq '/')
         {   
             `rm -f $pwd/config/$domain.root.nginx`;
             open(my $FH, ">$pwd/config/$domain.root.nginx");
@@ -35,6 +35,8 @@ sub Main
         }
         else
         {
+            $string = "location $key {\n" . $string . "}\n";
+            
             `rm -f $pwd/config/$domain.$fi.nginx`;
             open(my $FH, ">$pwd/config/$domain.$fi.nginx");
             print $FH $string;
@@ -344,6 +346,14 @@ sub DoParse
             }
         }
     }
+}
+
+sub trim
+{
+    my $str = shift;
+    $str =~ s/^[ \n\t]+//;
+    $str =~ s/[ \n\t]+$//;
+    return $str;
 }
 
 Main();
