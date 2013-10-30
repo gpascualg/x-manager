@@ -22,7 +22,7 @@ my @conditions = ();
 my @rewrites = ();
 my @server = ();
 my @temporal = ();
-my @location = ();
+my %location = ();
 my $doRewrites = 0;
 my $isTryFiles = 0;
 
@@ -135,7 +135,7 @@ foreach my $line (@lines)
         
         when ("</Files>")
         {
-            my $string = $conditions[0] . " {\n";
+            my $string = pop(@conditions) . " {\n";
             
             while (defined (my $temp = shift(@temporal)))
             {
@@ -143,7 +143,6 @@ foreach my $line (@lines)
             }
             
             $string .= "}\n";
-            undef(@conditions);
             
             push(@server, $string);
         }
@@ -204,6 +203,8 @@ foreach my $line (@lines)
             my $F = 0;
             my $type = '';
             my $last = 0;
+            my $wildcard = '';
+            my $loc = $relativePath;
             
             if (@args == 3)
             {
@@ -236,6 +237,10 @@ foreach my $line (@lines)
                         {
                             $type = 'permanent';
                         }
+                        elsif ($condition eq 'NC')
+                        {
+                            $wildcard = '*';
+                        }
                     }
                 }
             }
@@ -250,6 +255,7 @@ foreach my $line (@lines)
             {
                 if ($F)
                 {
+                    $loc = $args[0];
                     push(@rewrites, "return 403;");
                 }
                 else
@@ -279,7 +285,13 @@ foreach my $line (@lines)
                     --$i;
                 }
                 
-                push(@location, $string);
+                print $string;
+                
+                unless (defined($location{$loc}))
+                {
+                    $location{$loc} = new htLocation($loc);
+                }
+                $location{$loc}->push($string);
             }
         }
     }
@@ -290,6 +302,27 @@ my $out = '';
 while (defined (my $entry = shift(@server)))
 {
     $out .= $entry . "\n";
+}
+
+$i = 0;
+while (($key, $value) = each(%location)){
+    $string = $value->pop();
+    
+    if ($key eq '')
+    {   
+        `rm -f $pwd/config/$domain.root.nginx`;
+        open(my $FH, ">$pwd/config/$domain.root.nginx");
+        print $FH $string;
+        close($FH);
+    }
+    else
+    {
+        `rm -f $pwd/config/$domain.$i.nginx`;
+        open(my $FH, ">$pwd/config/$domain.$i.nginx");
+        print $FH $string;
+        close($FH);
+        ++$i;
+    }
 }
 
 my $relativeHeaders = "\nlocation $relativePath {\n";
@@ -308,10 +341,7 @@ if ($relativePath eq '')
     print $FH $out;
     close($FH);
     
-    `rm -f $pwd/config/$domain.rootnginx`;
-    open(my $FH, ">$pwd/config/$domain.rootnginx");
-    print $FH $relative;
-    close($FH);
+    
 }
 else
 {
