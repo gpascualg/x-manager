@@ -46,14 +46,17 @@ sub Main
     # We want to emulate an Apache like system, so we will have to keep going from / directory, to top most one
     SearchInDir("$pwd/$domain", $relativePath);
     
+    # Clean all old confs
+    `rm -f $pwd/config/$domain.*.nginx`;
+    
+    # Write new configurations
     my $fi = 0;
     while ((my $key, my $value) = each(%locations))
     {
         my $string = $value->pop();
         
         if ($key eq '/')
-        {   
-            `rm -f $pwd/config/$domain.root.nginx`;
+        {
             open(my $FH, ">$pwd/config/$domain.root.nginx");
             print $FH $string;
             close($FH);
@@ -62,7 +65,6 @@ sub Main
         {
             $string = "location $key {\n" . $string . "}\n";
             
-            `rm -f $pwd/config/$domain.$fi.nginx`;
             open(my $FH, ">$pwd/config/$domain.$fi.nginx");
             print $FH $string;
             close($FH);
@@ -71,6 +73,7 @@ sub Main
     }
     
     # Test for errors on configuration
+    # If there was an error, other clients parsed htaccess files wouldn't compile!
     my $out = `nginx -t 2>&1`;
     my @lines = split("\n", $out);
 
@@ -81,6 +84,7 @@ sub Main
         {
             my $path = "/www/" . $matches[1];
             `rm $path`;
+            print "[FAIL] Could't not compile HTACCESS $key on /www/$matches[1]\n";
         }
     }
 
